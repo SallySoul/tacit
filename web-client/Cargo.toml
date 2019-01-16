@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "=0.1.5"
 js-sys = "=0.3.8"
 wasm-bindgen = "=0.2.31"
+camera = { path = "../camera" }
 
 [dependencies.web-sys]
 version = "=0.3.8"

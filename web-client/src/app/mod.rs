@@ -1,3 +1,4 @@
+use camera::{ButtonState, Camera, MouseButton};
 use std::cell::RefCell;
 use std::rc::Rc;
 use web_sys::console::log_1;
@@ -5,44 +6,39 @@ use web_sys::console::log_1;
 pub type AppWrapper = Rc<RefCell<App>>;
 
 pub struct App {
-    mouse_pos: (i32, i32),
-    mouse_pressed: bool,
-    zoom_counter: f32,
     equation: String,
     clock: f32, 
     slider_pos: f32,
     checkbox: bool,
+    camera: Camera,
 }
 
 impl App {
     pub fn new_wrapper() -> AppWrapper {
         Rc::new(RefCell::new(App {
-            mouse_pos: (0, 0),
-            mouse_pressed: false,
-            zoom_counter: 0.0,
             equation: format!("x + y"),
             clock: 0.0,
             slider_pos: 0.0,
             checkbox: false,
+            camera: Camera::new(),
         }))
     }
 
     pub fn handle_message(&mut self, message: &Message) {
         match message {
             Message::MouseDown(x, y) => {
-                self.mouse_pressed = true;
-                self.mouse_pos = (*x, *y);
-                log_1(&format!("Mouse Down: {}, {}", x, y).into());
+                self.camera.handle_mouse_input(MouseButton::Left, ButtonState::Pressed);
+                self.camera.handle_mouse_move(*x as f32, *y as f32);
+                log_1(&format!("clock: {}", self.clock).into());
             },
             Message::MouseUp => {
-                self.mouse_pressed = false;
+                self.camera.handle_mouse_input(MouseButton::Left, ButtonState::Released);
             }
             Message::MouseMove(x, y) => {
-                self.mouse_pressed = true;
-                self.mouse_pos = (*x, *y);
+                self.camera.handle_mouse_move(*x as f32, *y as f32);
             },
             Message::Zoom(delta) => {
-                self.zoom_counter += delta;
+                self.camera.handle_scroll(*delta);
             },
             Message::EnterEquation(equation) => {
                 self.equation.clear();
