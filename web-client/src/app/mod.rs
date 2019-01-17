@@ -43,6 +43,13 @@ impl App {
             Message::EnterEquation(equation) => {
                 self.equation.clear();
                 self.equation += equation;
+                log_1(&format!("Start parse").into());
+
+                let input: Vec<char> = equation.chars().collect();
+                
+                let a = implicit_mesh::parser::parse_expression(&input, 0);
+
+                log_1(&format!("Function Parse: {:?}", a).into());
             }
             Message::AdvanceClock(time_delta) => {
                 self.clock += time_delta;

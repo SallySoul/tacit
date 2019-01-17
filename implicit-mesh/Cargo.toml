@@ -1,0 +1,14 @@
+[package]
+name = "implicit-mesh"
+version = "0.1.0"
+authors = ["Russell Bentley <russell.w.bentley@icloud.com>"]
+
+[dependencies]
+assert = "0.7.4"
+itertools = "0.7.4"
+geoprim = { path = "../geoprim" }
+serde_json = "1.0.18"
+cgmath = "0.16.1"
+
+[profile.release]
+debug = true

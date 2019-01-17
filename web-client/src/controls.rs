@@ -8,6 +8,7 @@ use web_sys::window;
 use web_sys::Element;
 use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
+use web_sys::console::log_1;
 
 pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
     let window = window().unwrap();
@@ -36,6 +37,12 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
         let app = Rc::clone(&app);
         let use_refraction_control = create_use_refraction_checkbox(app)?;
         controls.append_child(&use_refraction_control)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let text_input = create_text_input(app)?;
+        controls.append_child(&text_input)?;
     }
 
     Ok(())
@@ -84,6 +91,85 @@ fn create_use_refraction_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValu
     .create_element()?;
 
     Ok(use_refraction_control)
+}
+
+fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    log_1(&"Started create_text_input".into());
+/*
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        let window = window().unwrap();
+        let document = window.document().unwrap();
+
+        let text_box: HtmlInputElement = document.get_element_by_id("tacit_equation_entry_box").expect("Could not get text box").dyn_into().expect("Text box dyn into");
+        let text: String = text_box.value();
+
+        app
+            .borrow_mut()
+            .handle_message(&Message::EnterEquation(text));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+    log_1(&"1 create_text_input".into());
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let result = document.create_element("div")?;
+
+    let group: HtmlElement = result.dyn_into()?;
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+        button.set_type("submit");
+        button.set_oninput(Some(closure.as_ref().unchecked_ref()));
+        closure.forget();
+
+    let text_box: HtmlInputElement = document.create_element("text")?.dyn_into()?;
+        text_box.set_id("tacit_equation_entry_box");
+    
+    group.append_child(&button)?;
+    group.append_child(&text_box)?;
+*/
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        let window = window().unwrap();
+        let document = window.document().unwrap();
+
+        let text_box: HtmlInputElement = document.get_element_by_id("tacit_equation_entry_box").expect("Could not get text box").dyn_into().expect("Text box dyn into");
+        let text: String = text_box.value();
+
+        log_1(&format!("Text: {}", text).into());
+        app
+            .borrow_mut()
+            .handle_message(&Message::EnterEquation(text));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+    let text_input: HtmlElement = document.create_element("div")?.dyn_into()?;
+    log_1(&"Finished create_text_input".into());
+
+    let text_box: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    text_box.set_type("text");
+    text_box.set_id("tacit_equation_entry_box");
+    log_1(&"made_text_box".into());
+
+    text_input.append_child(&text_box)?;
+    log_1(&"appdned text b".into());
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Submit Equation");
+    log_1(&"added button".into());
+
+    text_input.append_child(&button)?;
+    log_1(&"appended button".into());
+
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+    log_1(&"appended closure".into());
+
+
+    Ok(text_input)
 }
 
 struct Slider {

@@ -6,6 +6,8 @@ use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::console::log_1;
 
+use web_sys::window;
+
 mod canvas;
 mod controls;
 mod app;
