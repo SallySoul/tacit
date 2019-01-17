@@ -2,6 +2,9 @@ use camera::{ButtonState, Camera, MouseButton};
 use std::cell::RefCell;
 use std::rc::Rc;
 use web_sys::console::log_1;
+use implicit_mesh::function::Function;
+use implicit_mesh::interval::Interval;
+use implicit_mesh::mesh_tree::*;
 
 pub type AppWrapper = Rc<RefCell<App>>;
 
@@ -47,9 +50,21 @@ impl App {
 
                 let input: Vec<char> = equation.chars().collect();
                 
-                let a = implicit_mesh::parser::parse_expression(&input, 0);
+                let a = implicit_mesh::parser::parse_expression(&input, 0).expect("not parseable");
+                let size_interval = Interval::new(100.0 / 2.0, 100.0 / 2.0);
+                let bounding_box = BoundingBox {
+                    x: size_interval.clone(),
+                    y: size_interval.clone(),
+                    z: size_interval.clone(),
+                };
 
-                log_1(&format!("Function Parse: {:?}", a).into());
+                let mut mtree = MeshTree::new(a, bounding_box);
+                mtree.next_level();
+                mtree.generate_vertex_map();
+                mtree.generate_triangle_set();
+
+                log_1(&"made mesh tree".into());
+
             }
             Message::AdvanceClock(time_delta) => {
                 self.clock += time_delta;
