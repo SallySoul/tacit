@@ -7,7 +7,7 @@ pub type AppWrapper = Rc<RefCell<App>>;
 
 pub struct App {
     equation: String,
-    clock: f32, 
+    pub clock: f32, 
     slider_pos: f32,
     checkbox: bool,
     camera: Camera,

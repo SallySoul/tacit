@@ -9,9 +9,12 @@
     <script src='/tacit_web_app.js'></script>
 
     <script>
+    console.log("Starting script in index.html");
     window.addEventListener('load', function () {
+      console.log("Window event handler called");
       window.wasm_bindgen('/tacit_web_app_bg.wasm')
         .then(function () {
+          console.log("Post loading wasm called");
           // Start our rust application. You can find `WebClient` in `src/lib.rs`
           const webClient = new window.wasm_bindgen.WebClient()
           webClient.start()
