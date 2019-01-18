@@ -2,6 +2,8 @@
 
 Implicit Equations to Meshes
 
+[![Build Status](https://travis-ci.org/SallySoul/tacit.svg?branch=master)](https://travis-ci.org/SallySoul/tacit)
+
 ## Introduction
 
 This repo contains several interconnected projects based around taking implicit
