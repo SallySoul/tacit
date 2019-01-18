@@ -148,7 +148,7 @@ fn parse_base<'a>(input: &'a [char], current_index: usize) -> ParseResult<(BNode
                 c: c,
                 pos: index,
                 exp: Expected::Base,
-            })
+            });
         }
     };
 

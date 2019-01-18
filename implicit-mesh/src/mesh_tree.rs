@@ -1,11 +1,11 @@
-use cgmath::Vector3;
 use crate::function::*;
 use crate::geoprim::*;
 use crate::interval::contains_zero;
 use crate::interval::Interval;
-use itertools::Itertools;
 use crate::key;
 use crate::key::Key;
+use cgmath::Vector3;
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::iter::FromIterator;
@@ -232,17 +232,18 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
             [3, 4], // [Neighbor { x: Same, y: More, z: Same }, Neighbor { x: Less, y: Same, z: Same }]
             //           [3, 5], // [Neighbor { x: Same, y: More, z: Same }, Neighbor { x: More, y: Same, z: Same }]
             [4, 5usize], // [Neighbor { x: Less, y: Same, z: Same }, Neighbor { x: More, y: Same, z: Same }]
-        ].iter()
-            .filter_map(
-                |[a, b]| match (maybe_neighbors[a.clone()], maybe_neighbors[b.clone()]) {
-                    (Some(key_1), Some(key_2)) => {
-                        let mut triangle = [vertex_key, key_1, key_2];
-                        triangle.sort();
-                        Some(triangle)
-                    }
-                    _ => None,
-                },
-            );
+        ]
+        .iter()
+        .filter_map(|[a, b]| {
+            match (maybe_neighbors[a.clone()], maybe_neighbors[b.clone()]) {
+                (Some(key_1), Some(key_2)) => {
+                    let mut triangle = [vertex_key, key_1, key_2];
+                    triangle.sort();
+                    Some(triangle)
+                }
+                _ => None,
+            }
+        });
 
         self.triangle_set.extend(triangle_iter);
     }

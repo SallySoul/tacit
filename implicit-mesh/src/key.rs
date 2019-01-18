@@ -84,11 +84,16 @@ impl Neighbor {
     }
 
     pub fn all_neighbors() -> impl Iterator<Item = Neighbor> {
-        NeighborRelations.iter()
+        NeighborRelations
+            .iter()
             .cartesian_product(NeighborRelations.iter())
             .cartesian_product(NeighborRelations.iter())
             .skip(1) // The First is Same, Same, Same which is the identity, not a neighbor
-            .map(|((x, y), z)| Neighbor {x: x.clone(), y: y.clone(), z: z.clone()})
+            .map(|((x, y), z)| Neighbor {
+                x: x.clone(),
+                y: y.clone(),
+                z: z.clone(),
+            })
     }
 
     pub fn component_neighbors() -> impl Iterator<Item = Neighbor> {

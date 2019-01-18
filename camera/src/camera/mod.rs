@@ -1,6 +1,6 @@
+use crate::perspective;
 use cgmath::prelude::*;
 use cgmath::{Basis3, Matrix3, Matrix4, Quaternion, Rad, Vector2, Vector3};
-use crate::perspective;
 use std::f32;
 
 /// The camera is a state machine, what each input does depends on the state that its in.
