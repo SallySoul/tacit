@@ -1,4 +1,4 @@
-use interval::Interval;
+use crate::interval::Interval;
 use std::collections::HashMap;
 
 pub trait Function: Sized {

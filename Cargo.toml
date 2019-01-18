@@ -2,6 +2,7 @@
 members = [
   "camera",
   "geoprim",
+  "implicit-cli",
   "implicit-mesh",
   "web-client",
 ]

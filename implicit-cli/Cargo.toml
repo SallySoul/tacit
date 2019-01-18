@@ -1,12 +1,11 @@
 [package]
-name = "implicit-mesh"
+name = "expr_to_geom"
 version = "0.1.0"
 authors = ["Sally Soul <SallySoul@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-assert = "0.7.4"
-itertools = "0.7.4"
+implicit-mesh = { path = "../implicit-mesh"}
 geoprim = { path = "../geoprim" }
-serde_json = "1.0.18"
-cgmath = "0.16.1"
+structopt = "0.2.8"
+bincode = "1.0.0"

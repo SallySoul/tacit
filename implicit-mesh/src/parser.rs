@@ -1,5 +1,5 @@
-use function_ir::Node;
-use parser_error::{Expected, ParseError, ParseResult};
+use crate::function_ir::Node;
+use crate::parser_error::{Expected, ParseError, ParseResult};
 
 type BNode = Box<Node>;
 

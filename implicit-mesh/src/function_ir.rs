@@ -1,5 +1,5 @@
-use function::Function;
-use interval::*;
+use crate::function::Function;
+use crate::interval::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Debug)]
@@ -77,10 +77,10 @@ impl Function for Node {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use parser::parse_expression;
+    use crate::parser::parse_expression;
     use std::collections::HashMap;
     #[macro_use]
-    use util;
+    use crate::util;
 
     #[test]
     fn test_function_evaluate() {

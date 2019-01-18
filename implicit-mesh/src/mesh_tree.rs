@@ -1,11 +1,11 @@
 use cgmath::Vector3;
-use function::*;
-use geoprim::*;
-use interval::contains_zero;
-use interval::Interval;
+use crate::function::*;
+use crate::geoprim::*;
+use crate::interval::contains_zero;
+use crate::interval::Interval;
 use itertools::Itertools;
-use key;
-use key::Key;
+use crate::key;
+use crate::key::Key;
 use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::iter::FromIterator;

@@ -1,4 +1,4 @@
-use function::Function;
+use crate::function::Function;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::f32;

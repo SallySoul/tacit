@@ -100,7 +100,7 @@ pub trait Key: Hash + Sized + Copy + Clone + PartialEq + Eq {
     fn root_key() -> Self;
     fn child_key(&self, i: u64) -> Self;
     fn level(&self) -> u32;
-    fn neighbor_key(&self, Neighbor) -> Option<Self>;
+    fn neighbor_key(&self, n: Neighbor) -> Option<Self>;
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
