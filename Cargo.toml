@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "camera",
+  "geoprim",
+  "implicit-mesh",
+  "web-client",
+]
