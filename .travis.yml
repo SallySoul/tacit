@@ -1,13 +1,36 @@
 language: rust
-rust:
-  - stable
-  - beta
-  - nightly
-matrix:
+
+cache: cargo
+
+jobs:
+  # Allow nightly failures / don't wait for nightly to finish build
   allow_failures:
     - rust: nightly
   fast_finish: true
 
-script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  include:
+    - name: "build and test workspace - stable"
+      rust: stable
+      script:
+        - cargo build --verbose --all
+        - cargo test --verbose --all
+
+    - name: "build and test workspace - beta"
+      rust: beta
+      script:
+        - cargo build --verbose --all
+        - cargo test --verbose --all
+
+    - name: "build and test workspace - nightly"
+      rust: nightly
+      script:
+        - cargo build --verbose --all
+        - cargo test --verbose --all
+
+    - name: "build web-client / wasm-bindgen - stable"
+      rust: stable
+      install:
+        - rustup target add wasm32-unknown-unknown
+      script:
+        - sh web-client/build.sh
+
