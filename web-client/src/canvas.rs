@@ -107,7 +107,8 @@ fn attach_mouse_wheel_handler(canvas: &HtmlCanvasElement, app: AppWrapper) -> Re
 
         let zoom_amount = event.delta_y();
 
-        app.borrow_mut().handle_message(&Message::Zoom(zoom_amount as f32));
+        app.borrow_mut()
+            .handle_message(&Message::Zoom(zoom_amount as f32));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -161,4 +162,3 @@ fn attach_touch_end_handler(canvas: &HtmlCanvasElement, app: AppWrapper) -> Resu
 
     Ok(())
 }
-

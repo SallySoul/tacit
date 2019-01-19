@@ -9,11 +9,14 @@ jobs:
   fast_finish: true
 
   include:
-    - name: "build and test workspace - stable"
+    - name: "build and test workspace, format code - stable"
       rust: stable
+      install:
+        - rustup component add rustfmt
       script:
         - cargo build --verbose --all
         - cargo test --verbose --all
+        - cargo fmt --all -- --check
 
     - name: "build and test workspace - beta"
       rust: beta
