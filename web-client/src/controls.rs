@@ -25,70 +25,31 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
     controls.style().set_property("padding-left", "5px")?;
     let controls: Element = controls.dyn_into()?;
 
-    // Reflectivity
-    {
-        let app = Rc::clone(&app);
-        let reflectivity_control = create_reflectivity_control(app)?;
-        controls.append_child(&reflectivity_control)?;
-    }
-
-    // Use Refraction
-    {
-        let app = Rc::clone(&app);
-        let use_refraction_control = create_use_refraction_checkbox(app)?;
-        controls.append_child(&use_refraction_control)?;
-    }
-
     {
         let app = Rc::clone(&app);
         let text_input = create_text_input(app)?;
         controls.append_child(&text_input)?;
     }
 
+    {
+        let app = Rc::clone(&app);
+        let button = create_relax_button(app)?;
+        controls.append_child(&button)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let button = create_next_level_button(app)?;
+        controls.append_child(&button)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let button = create_clear_button(app)?;
+        controls.append_child(&button)?;
+    }
+
     Ok(())
-}
-
-fn create_reflectivity_control(app: AppWrapper) -> Result<HtmlElement, JsValue> {
-    let handler = move |event: web_sys::Event| {
-        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
-        let reflectivity = input_elem.value().parse().unwrap();
-
-        app.borrow_mut()
-            .handle_message(&Message::SetSlider(reflectivity));
-    };
-    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
-
-    let reflectivity_control = Slider {
-        min: 0.0,
-        max: 1.0,
-        step: 0.1,
-        start: 0.5,
-        label: "Slider",
-        closure,
-    }
-    .create_element()?;
-
-    Ok(reflectivity_control)
-}
-
-fn create_use_refraction_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
-    let handler = move |event: web_sys::Event| {
-        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
-        let use_refraction = input_elem.checked();
-
-        app.borrow_mut()
-            .handle_message(&Message::SetCheckbox(use_refraction));
-    };
-    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
-
-    let use_refraction_control = Checkbox {
-        start_checked: true,
-        label: "Use Refraction",
-        closure,
-    }
-    .create_element()?;
-
-    Ok(use_refraction_control)
 }
 
 fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
@@ -169,6 +130,63 @@ fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     log_1(&"appended closure".into());
 
     Ok(text_input)
+}
+
+fn create_relax_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        app.borrow_mut().handle_message(&Message::Relax);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Relax Surface Net");
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    Ok(button.dyn_into()?)
+}
+
+fn create_next_level_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        app.borrow_mut().handle_message(&Message::NextLevel);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Next Level");
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    Ok(button.dyn_into()?)
+}
+
+fn create_clear_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        app.borrow_mut().handle_message(&Message::Clear);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Clear");
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    Ok(button.dyn_into()?)
 }
 
 struct Slider {

@@ -20,6 +20,22 @@ I am also working on a web application in the `web-client` crate.
 
 ## For Developers
 
+# Dependencies
+
+Only the `web-client` crate has special dependencies at the moment. We use 
+`wasm-bindgen`, version `0.2.33` for now. I would suggest the following.
+
+```
+cargo install wasm-bindgen-cli --version 0.2.33
+```
+
+Note that running `web-client/build.sh` will ensure you have the right version installed.
+I would like to figure out how to setup a virtual env kind of setup for rust / cargo but have
+not done so yet.
+
+In order to build the `release` build of the the `web-client` you will need to have installed
+the `wasm-opt` tool from the [binaryen](https://github.com/WebAssembly/binaryen) toolchain.
+
 # Formatting
 
 I use the defaults for `rustfmt`. The one exception I've made so far is when declaring
