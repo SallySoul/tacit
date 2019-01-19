@@ -1,5 +1,7 @@
 # Tacit Web Client
 
+This crate contains the source for a web app frontend for the tacit plotter.
+
 ## Useful links
 
 * This project was my bible for figuring out how to port the project to use web-assembly.

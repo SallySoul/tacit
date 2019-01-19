@@ -12,7 +12,7 @@ use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "expr_to_geom")]
+#[structopt(name = "implicit-cli")]
 struct Args {
     /// The epression to generate geometry for
     #[structopt(short = "e", long = "expression")]

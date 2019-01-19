@@ -1,5 +1,5 @@
 [package]
-name = "expr_to_geom"
+name = "implicit-cli"
 version = "0.1.0"
 authors = ["Sally Soul <SallySoul@protonmail.com>"]
 edition = "2018"
