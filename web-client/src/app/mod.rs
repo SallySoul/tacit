@@ -84,8 +84,6 @@ impl App {
                     .update(*time_delta, *window_width, *window_height);
             }
             Message::NextLevel => {
-                log_1(&"App: NextLevel".into());
-
                 let mut plot = Plot::new();
                 match &mut self.mtree {
                     Some(mtree) => {
@@ -93,16 +91,6 @@ impl App {
                         mtree.generate_vertex_map();
                         mtree.generate_triangle_set();
                         mtree.add_to_plot(true, true, true, true, &mut plot);
-
-                        log_1(
-                            &format!(
-                                "App: lines: {}, level: {}, solution cells: {}",
-                                plot.lines.len(),
-                                mtree.level,
-                                mtree.solution_map.len()
-                            )
-                            .into(),
-                        );
                     }
                     None => {
                         log_1(&"App: no mtree to next level".into());
