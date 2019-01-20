@@ -1,7 +1,7 @@
 use wasm_bindgen::JsValue;
 use web_sys::console::log_1;
-use web_sys::WebGlRenderingContext as GL;
-use web_sys::{WebGlBuffer, WebGlRenderingContext};
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::{WebGlBuffer, WebGl2RenderingContext};
 
 use js_sys::{Float32Array, Uint16Array};
 
@@ -20,7 +20,7 @@ struct ArrayBuffer {
 
 impl ArrayBuffer {
     fn new(
-        gl_context: &WebGlRenderingContext,
+        gl_context: &WebGl2RenderingContext,
         float_buffer: Vec<f32>,
     ) -> Result<ArrayBuffer, JsValue> {
         let float_array;
@@ -59,7 +59,7 @@ struct IndexBuffer {
 
 impl IndexBuffer {
     fn new(
-        gl_context: &WebGlRenderingContext,
+        gl_context: &WebGl2RenderingContext,
         u16_buffer: Vec<u16>,
     ) -> Result<IndexBuffer, JsValue> {
         let u16_array;
@@ -99,7 +99,7 @@ struct PlotBuffers {
 }
 
 impl PlotBuffers {
-    fn new(gl_context: &WebGlRenderingContext, plot: &Plot) -> Result<PlotBuffers, JsValue> {
+    fn new(gl_context: &WebGl2RenderingContext, plot: &Plot) -> Result<PlotBuffers, JsValue> {
         // Extract the coords from each point, and create an array buffer
         let mut point_vertices_float_vec = Vec::with_capacity(plot.points.len() * 3);
         for point in &plot.points {
@@ -141,11 +141,11 @@ pub type WebRendererWrapper = Rc<RefCell<WebRenderer>>;
 pub struct WebRenderer {
     shader_sys: ShaderSystem,
     plot_buffers: Option<PlotBuffers>,
-    pub gl_context: WebGlRenderingContext,
+    pub gl_context: WebGl2RenderingContext,
 }
 
 impl WebRenderer {
-    pub fn new_wrapper(gl_context: WebGlRenderingContext) -> WebRendererWrapper {
+    pub fn new_wrapper(gl_context: WebGl2RenderingContext) -> WebRendererWrapper {
         let shader_sys = ShaderSystem::new(&gl_context);
 
         Rc::new(RefCell::new(WebRenderer {

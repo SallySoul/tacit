@@ -44,6 +44,6 @@ else
   # Build the webgl_water_tutorial.wasm file
   cargo build --target wasm32-unknown-unknown --release &&
   wasm-bindgen ../target/wasm32-unknown-unknown/release/tacit_web_app.wasm --out-dir . --no-typescript --no-modules &&
-  wasm-opt -O3 -o optimized.wasm tacit_web_app_bg.wasm  &&
+  wasm-opt -O4 -o optimized.wasm tacit_web_app_bg.wasm  &&
   mv optimized.wasm tacit_web_app_bg.wasm
 fi

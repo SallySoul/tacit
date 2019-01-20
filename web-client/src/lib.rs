@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use web_sys::console::log_1;
-use web_sys::WebGlRenderingContext;
+use web_sys::WebGl2RenderingContext;
 
 mod app;
 mod canvas;

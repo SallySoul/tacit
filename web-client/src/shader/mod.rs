@@ -20,7 +20,7 @@ pub struct ShaderSystem {
 
 impl ShaderSystem {
     /// Create  a new ShaderSystem
-    pub fn new(gl: &WebGlRenderingContext) -> ShaderSystem {
+    pub fn new(gl: &WebGl2RenderingContext) -> ShaderSystem {
         let mut programs = HashMap::new();
 
         let simple_shader = Shader::new(&gl, SIMPLE_VS, SIMPLE_FS).unwrap();
@@ -43,7 +43,7 @@ impl ShaderSystem {
 
     /// Use a shader program. We cache the last used shader program to avoid unnecessary
     /// calls to the GPU.
-    pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) {
+    pub fn use_program(&self, gl: &WebGl2RenderingContext, shader_kind: ShaderKind) {
         if *self.active_program.borrow() == shader_kind {
             return;
         }
@@ -62,12 +62,12 @@ pub struct Shader {
 impl Shader {
     /// Create a new Shader program from a vertex and fragment shader
     pub fn new(
-        gl: &WebGlRenderingContext,
+        gl: &WebGl2RenderingContext,
         vert_shader: &str,
         frag_shader: &str,
     ) -> Result<Shader, JsValue> {
-        let vert_shader = compile_shader(&gl, WebGlRenderingContext::VERTEX_SHADER, vert_shader)?;
-        let frag_shader = compile_shader(&gl, WebGlRenderingContext::FRAGMENT_SHADER, frag_shader)?;
+        let vert_shader = compile_shader(&gl, WebGl2RenderingContext::VERTEX_SHADER, vert_shader)?;
+        let frag_shader = compile_shader(&gl, WebGl2RenderingContext::FRAGMENT_SHADER, frag_shader)?;
         let program = link_program(&gl, &vert_shader, &frag_shader)?;
 
         let uniforms = RefCell::new(HashMap::new());
@@ -80,7 +80,7 @@ impl Shader {
     /// we won't need to query the shader program.
     pub fn get_uniform_location(
         &self,
-        gl: &WebGlRenderingContext,
+        gl: &WebGl2RenderingContext,
         uniform_name: &str,
     ) -> Option<WebGlUniformLocation> {
         let mut uniforms = self.uniforms.borrow_mut();
@@ -99,7 +99,7 @@ impl Shader {
 
 /// Create a shader program using the WebGL APIs
 fn compile_shader(
-    gl: &WebGlRenderingContext,
+    gl: &WebGl2RenderingContext,
     shader_type: u32,
     source: &str,
 ) -> Result<WebGlShader, String> {
@@ -110,7 +110,7 @@ fn compile_shader(
     gl.compile_shader(&shader);
 
     if gl
-        .get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS)
+        .get_shader_parameter(&shader, WebGl2RenderingContext::COMPILE_STATUS)
         .as_bool()
         .unwrap_or(false)
     {
@@ -124,7 +124,7 @@ fn compile_shader(
 
 /// Link a shader program using the WebGL APIs
 fn link_program(
-    gl: &WebGlRenderingContext,
+    gl: &WebGl2RenderingContext,
     vert_shader: &WebGlShader,
     frag_shader: &WebGlShader,
 ) -> Result<WebGlProgram, String> {
@@ -138,7 +138,7 @@ fn link_program(
     gl.link_program(&program);
 
     if gl
-        .get_program_parameter(&program, WebGlRenderingContext::LINK_STATUS)
+        .get_program_parameter(&program, WebGl2RenderingContext::LINK_STATUS)
         .as_bool()
         .unwrap_or(false)
     {

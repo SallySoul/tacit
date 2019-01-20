@@ -19,3 +19,7 @@ This crate contains the source for a web app frontend for the tacit plotter.
 * This blog post, and accompanying repository, are a great referecnce for line drawing techniques.
 
   [Drawing Lines is Hard](https://mattdesl.svbtle.com/drawing-lines-is-hard)
+
+* WebGL1 vs WebGL2, what's the difference?
+
+  [WebGL2 What's New](https://webgl2fundamentals.org/webgl/lessons/webgl2-whats-new.html)

@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
-use web_sys::WebGlRenderingContext as GL;
+use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
 use crate::APP_DIV_ID;
@@ -11,13 +11,10 @@ use crate::APP_DIV_ID;
 pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;
 
-pub fn create_webgl_context(app: AppWrapper) -> Result<WebGlRenderingContext, JsValue> {
+pub fn create_webgl_context(app: AppWrapper) -> Result<WebGl2RenderingContext, JsValue> {
     let canvas = init_canvas(app)?;
 
-    let gl: WebGlRenderingContext = canvas.get_context("webgl")?.unwrap().dyn_into()?;
-
-    gl.clear_color(0.0, 0.0, 0.0, 1.0);
-    gl.enable(GL::DEPTH_TEST);
+    let gl: WebGl2RenderingContext = canvas.get_context("webgl2")?.unwrap().dyn_into()?;
 
     Ok(gl)
 }
