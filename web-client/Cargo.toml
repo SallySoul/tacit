@@ -9,13 +9,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "=0.1.5"
-js-sys = "=0.3.6"
-wasm-bindgen = "=0.2.29"
+js-sys = "=0.3.10"
+wasm-bindgen = "=0.2.33"
 camera = { path = "../camera" }
 implicit-mesh = { path = "../implicit-mesh" }
+geoprim = { path = "../geoprim" }
 
 [dependencies.web-sys]
-version = "=0.3.6"
+version = "=0.3.10"
 features = [
   'CssStyleDeclaration',
   'Document',

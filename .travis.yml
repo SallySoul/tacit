@@ -35,5 +35,5 @@ jobs:
       install:
         - rustup target add wasm32-unknown-unknown
       script:
-        - sh web-client/build.sh
+        -  ./web-client/build.sh
 

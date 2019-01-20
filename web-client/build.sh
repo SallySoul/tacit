@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#
+# build.sh
+#
+# This script coordinates cargo, wasm-bindgen, and other utilities to create a 
+# web deployable set of artifacts. This file was started as a copy of build.sh
+# from Chinedu Francis Nwafili's excellent webgl-water-tutorial
+
 # Change to the directory that this script is in.
 # This allows you to run this script from anywhere and have it still work.
 cd $(dirname $0)
@@ -7,8 +14,11 @@ cd $(dirname $0)
 # Install wasm-bindgen if its not there already
 # This is done here mostly becuase cargo install errors
 # if tool is installed / cache, which is rough on CI
-if [ ! -f $HOME/.cargo/bin/wasm-bindgen ]; then
-  cargo install wasm-bindgen-cli --version 0.2.29
+if ! (test -f $HOME/.cargo/bin/wasm-bindgen && test "`wasm-bindgen --version`" = "wasm-bindgen 0.2.33" ); then
+  echo "wasm-bindgen not installed or out of date: installing"
+  cargo install -f wasm-bindgen-cli --version 0.2.33
+else
+  echo "wasm-bindgen installed and up-to-date"
 fi
 
 # ./build.sh

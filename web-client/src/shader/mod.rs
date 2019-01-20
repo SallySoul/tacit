@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use web_sys::*;
 
 static SIMPLE_VS: &'static str = include_str!("./vertex_shader.vert");
-static SIMPLE_FS: &'static str = include_str!("./framgment_shader.frag");
+static SIMPLE_FS: &'static str = include_str!("./fragment_shader.frag");
 
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -15,7 +15,7 @@ pub enum ShaderKind {
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {
     programs: HashMap<ShaderKind, Shader>,
-    active_program: RefCell<ShaderKind>,
+    pub active_program: RefCell<ShaderKind>,
 }
 
 impl ShaderSystem {
@@ -61,7 +61,7 @@ pub struct Shader {
 
 impl Shader {
     /// Create a new Shader program from a vertex and fragment shader
-    fn new(
+    pub fn new(
         gl: &WebGlRenderingContext,
         vert_shader: &str,
         frag_shader: &str,
