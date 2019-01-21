@@ -27,9 +27,9 @@ impl App {
             camera: Camera::new(),
             renderer: None,
             mtree: None,
-            draw_bb: false,
-            draw_vertices: true,
-            draw_edges: true,
+            draw_bb: crate::DRAW_BB_START,
+            draw_vertices: crate::DRAW_VERTICES_START,
+            draw_edges: crate::DRAW_EDGES_START,
         }))
     }
 

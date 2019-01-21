@@ -97,6 +97,7 @@ fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let text_box: HtmlInputElement = document.create_element("input")?.dyn_into()?;
     text_box.set_type("text");
     text_box.set_id("tacit_equation_entry_box");
+    text_box.set_value(crate::EQUATION_START);
     log_1(&"made_text_box".into());
 
     text_input.append_child(&text_box)?;
@@ -185,7 +186,7 @@ fn create_draw_bb_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
 
     let draw_control = Checkbox {
-        start_checked: false,
+        start_checked: crate::DRAW_BB_START,
         label: "Draw Bounding Boxes",
         closure,
     }
@@ -205,7 +206,7 @@ fn create_draw_vertices_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue
     let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
 
     let draw_control = Checkbox {
-        start_checked: true,
+        start_checked: crate::DRAW_VERTICES_START,
         label: "Draw Vertices",
         closure,
     }
@@ -227,7 +228,7 @@ fn create_draw_edges_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
 
     let draw_control = Checkbox {
-        start_checked: true,
+        start_checked: crate::DRAW_EDGES_START,
         label: "Draw Edges",
         closure,
     }

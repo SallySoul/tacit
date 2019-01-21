@@ -14,6 +14,10 @@ use crate::app::{App, AppWrapper, Message};
 use crate::render::WebRendererWrapper;
 
 pub static APP_DIV_ID: &'static str = "tacit-app";
+pub static EQUATION_START: &'static str = "x^2 + y^2 + z^2 - 100";
+pub static DRAW_BB_START: bool = true;
+pub static DRAW_VERTICES_START: bool = false;
+pub static DRAW_EDGES_START: bool = false;
 
 #[wasm_bindgen]
 pub struct WebClient {
@@ -34,6 +38,9 @@ impl WebClient {
         let renderer = render::WebRenderer::new_wrapper(gl_context);
 
         app.borrow_mut().set_renderer(Rc::clone(&renderer));
+
+        app.borrow_mut()
+            .handle_message(&Message::EnterEquation(String::from(crate::EQUATION_START)));
 
         controls::append_controls(Rc::clone(&app)).expect("append_controls");
 
