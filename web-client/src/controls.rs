@@ -67,6 +67,11 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
         controls.append_child(&element)?;
     }
 
+    {
+        let app = Rc::clone(&app);
+        let element = create_default_cam_button(app)?;
+        controls.append_child(&element)?;
+    }
     Ok(())
 }
 
@@ -116,6 +121,24 @@ fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     log_1(&"appended closure".into());
 
     Ok(text_input)
+}
+
+fn create_default_cam_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |_event: web_sys::Event| {
+        app.borrow_mut().handle_message(&Message::DefaultCam);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Default Cam Pos");
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    Ok(button.dyn_into()?)
 }
 
 fn create_relax_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {

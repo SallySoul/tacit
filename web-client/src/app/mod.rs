@@ -168,6 +168,9 @@ impl App {
                 self.draw_edges = *draw_flag;
                 self.update_plot();
             }
+            Message::DefaultCam => {
+                self.camera.transition_to_default();
+            }
         }
     }
 }
@@ -185,4 +188,5 @@ pub enum Message {
     DrawBoundingBoxes(bool),
     DrawVertices(bool),
     DrawEdges(bool),
+    DefaultCam,
 }
