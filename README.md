@@ -18,9 +18,16 @@ can interactivley generate geometry files that are viewable via the `asap` plott
 
 I am also working on a web application in the `web-client` crate.
 
+## Design Decisions
+
+### WebGl 1
+
+Until Webkit supports webGL 2, I will not move towards supporting it. (Unless it becomes it
+becomes an overwhelming technical limitation).
+
 ## For Developers
 
-# Dependencies
+### Dependencies
 
 Only the `web-client` crate has special dependencies at the moment. We use 
 `wasm-bindgen`, version `0.2.33` for now. I would suggest the following.
@@ -36,7 +43,7 @@ not done so yet.
 In order to build the `release` build of the the `web-client` you will need to have installed
 the `wasm-opt` tool from the [binaryen](https://github.com/WebAssembly/binaryen) toolchain.
 
-# Formatting
+### Formatting
 
 I use the defaults for `rustfmt`. The one exception I've made so far is when declaring
 all elements in a matrix. In that case, preficing the delcaration with
@@ -47,7 +54,7 @@ workspace you can run the following command.
 cargo fmt --all
 ```
 
-# Testing
+### Testing
 
 In order to run all tests in the works space please the following command.
 

@@ -123,6 +123,14 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
         result
     }
 
+    pub fn get_level(&self) -> u32 {
+        self.level
+    }
+
+    pub fn get_solution_cell_count(&self) -> usize {
+        self.solution_map.len()
+    }
+
     pub fn next_level(&mut self) {
         self.vertex_map.clear();
         self.edge_set.clear();

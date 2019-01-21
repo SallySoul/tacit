@@ -15,6 +15,9 @@ pub struct App {
     pub camera: Camera,
     renderer: Option<WebRendererWrapper>,
     mtree: Option<MeshTree<implicit_mesh::key::MortonKey, Node>>,
+    draw_bb: bool,
+    draw_vertices: bool,
+    draw_edges: bool,
 }
 
 impl App {
@@ -24,11 +27,36 @@ impl App {
             camera: Camera::new(),
             renderer: None,
             mtree: None,
+            draw_bb: false,
+            draw_vertices: true,
+            draw_edges: true,
         }))
     }
 
     pub fn set_renderer(&mut self, renderer: WebRendererWrapper) {
         self.renderer = Some(renderer);
+    }
+
+    pub fn update_plot(&mut self) {
+        let mut plot = Plot::new();
+        if let Some(mtree) = &mut self.mtree {
+            mtree.add_to_plot(
+                self.draw_bb,
+                self.draw_vertices,
+                self.draw_edges,
+                false,
+                &mut plot,
+            );
+        } else {
+            return;
+        }
+
+        if let Some(renderer) = &self.renderer {
+            renderer
+                .borrow_mut()
+                .set_plot(&plot)
+                .expect("Unable to set_plot for renderer");
+        }
     }
 
     pub fn handle_message(&mut self, message: &Message) {
@@ -88,49 +116,51 @@ impl App {
                 match &mut self.mtree {
                     Some(mtree) => {
                         mtree.next_level();
+                        mtree.generate_edge_set();
                         mtree.generate_vertex_map();
                         mtree.generate_triangle_set();
-                        mtree.add_to_plot(true, true, true, true, &mut plot);
+
+                        log_1(
+                            &format!(
+                                "App: level: {}, solution cell count: {}",
+                                mtree.get_level(),
+                                mtree.get_solution_cell_count()
+                            )
+                            .into(),
+                        );
                     }
                     None => {
                         log_1(&"App: no mtree to next level".into());
                         return;
                     }
                 };
-
-                match &mut self.renderer {
-                    Some(renderer) => {
-                        renderer
-                            .borrow_mut()
-                            .set_plot(&plot)
-                            .expect("Unable to set plot");
-                    }
-                    None => (),
-                };
+                self.update_plot();
             }
             Message::Relax => {
-                log_1(&"App: Relax".into());
-
                 match &mut self.mtree {
                     Some(mtree) => {
                         mtree.relax_vertices();
                     }
                     None => {
-                        log_1(&"App: no mtree to relax".into());
                         return;
                     }
                 };
-                /*
-                match self.renderer {
-                    Some(renderer) => {
-                        let mut plot = Plot::new();
-                        self.mtree.unwrap().add_to_plot(false, true, false, true, &mut plot);
-
-                        self.renderer.unwrap().borrow_mut().set_plot(&plot);
-                    }
-                    None => ()
-                };
-                */
+                self.update_plot();
+            }
+            Message::DrawBoundingBoxes(draw_flag) => {
+                log_1(&format!("App: draw bb: {}", draw_flag).into());
+                self.draw_bb = *draw_flag;
+                self.update_plot();
+            }
+            Message::DrawVertices(draw_flag) => {
+                log_1(&format!("App: draw vertices: {}", draw_flag).into());
+                self.draw_vertices = *draw_flag;
+                self.update_plot();
+            }
+            Message::DrawEdges(draw_flag) => {
+                log_1(&format!("App: draw edges: {}", draw_flag).into());
+                self.draw_edges = *draw_flag;
+                self.update_plot();
             }
         }
     }
@@ -146,4 +176,7 @@ pub enum Message {
     NextLevel,
     Relax,
     Clear,
+    DrawBoundingBoxes(bool),
+    DrawVertices(bool),
+    DrawEdges(bool),
 }

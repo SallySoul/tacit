@@ -49,43 +49,28 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
         controls.append_child(&button)?;
     }
 
+    {
+        let app = Rc::clone(&app);
+        let element = create_draw_bb_checkbox(app)?;
+        controls.append_child(&element)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let element = create_draw_vertices_checkbox(app)?;
+        controls.append_child(&element)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let element = create_draw_edges_checkbox(app)?;
+        controls.append_child(&element)?;
+    }
+
     Ok(())
 }
 
 fn create_text_input(app: AppWrapper) -> Result<HtmlElement, JsValue> {
-    log_1(&"Started create_text_input".into());
-    /*
-        let handler = move |event: web_sys::Event| {
-            log_1(&format!("Event: {:?}", event).into());
-            let window = window().unwrap();
-            let document = window.document().unwrap();
-
-            let text_box: HtmlInputElement = document.get_element_by_id("tacit_equation_entry_box").expect("Could not get text box").dyn_into().expect("Text box dyn into");
-            let text: String = text_box.value();
-
-            app
-                .borrow_mut()
-                .handle_message(&Message::EnterEquation(text));
-        };
-        let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
-        log_1(&"1 create_text_input".into());
-        let window = window().unwrap();
-        let document = window.document().unwrap();
-
-        let result = document.create_element("div")?;
-
-        let group: HtmlElement = result.dyn_into()?;
-        let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
-            button.set_type("submit");
-            button.set_oninput(Some(closure.as_ref().unchecked_ref()));
-            closure.forget();
-
-        let text_box: HtmlInputElement = document.create_element("text")?.dyn_into()?;
-            text_box.set_id("tacit_equation_entry_box");
-
-        group.append_child(&button)?;
-        group.append_child(&text_box)?;
-    */
     let handler = move |event: web_sys::Event| {
         log_1(&format!("Event: {:?}", event).into());
         let window = window().unwrap();
@@ -189,6 +174,68 @@ fn create_clear_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     Ok(button.dyn_into()?)
 }
 
+fn create_draw_bb_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let draw_flag = input_elem.checked();
+
+        app.borrow_mut()
+            .handle_message(&Message::DrawBoundingBoxes(draw_flag));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let draw_control = Checkbox {
+        start_checked: false,
+        label: "Draw Bounding Boxes",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(draw_control)
+}
+
+fn create_draw_vertices_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let draw_flag = input_elem.checked();
+
+        app.borrow_mut()
+            .handle_message(&Message::DrawVertices(draw_flag));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let draw_control = Checkbox {
+        start_checked: true,
+        label: "Draw Vertices",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(draw_control)
+}
+
+fn create_draw_edges_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let draw_flag = input_elem.checked();
+
+        log_1(&format!("Handler: e: {:?}", event).into());
+
+        app.borrow_mut()
+            .handle_message(&Message::DrawEdges(draw_flag));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let draw_control = Checkbox {
+        start_checked: true,
+        label: "Draw Edges",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(draw_control)
+}
+
 struct Slider {
     min: f32,
     max: f32,
@@ -244,7 +291,7 @@ impl Checkbox {
         checkbox.set_checked(self.start_checked);
 
         let closure = self.closure;
-        checkbox.set_oninput(Some(closure.as_ref().unchecked_ref()));
+        checkbox.set_onclick(Some(closure.as_ref().unchecked_ref()));
         closure.forget();
 
         let label = document.create_element("label")?;
