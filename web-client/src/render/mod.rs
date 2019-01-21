@@ -234,7 +234,7 @@ impl WebRenderer {
 
         self.gl_context.draw_elements_with_i32(
             GL::LINES,
-            plot_buffers.line_count,
+            plot_buffers.line_count * 2,
             GL::UNSIGNED_SHORT,
             0,
         );

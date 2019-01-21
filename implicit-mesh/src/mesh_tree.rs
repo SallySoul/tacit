@@ -65,16 +65,16 @@ impl BoundingBox {
         //
         // 1.) Make a point buffer with all the corners
         let mut points = Vec::new();
-        for x in vec![self.x.min, self.x.max] {
-            for y in vec![self.y.min, self.y.max] {
-                for z in vec![self.z.min, self.z.max] {
-                    points.push(Point::new(x, y, z));
+        for x in &[self.x.min, self.x.max] {
+            for y in &[self.y.min, self.y.max] {
+                for z in &[self.z.min, self.z.max] {
+                    points.push(Point::new(*x, *y, *z));
                 }
             }
         }
 
         // 2.) make a line buffer with appropriate endpoints
-        let index_pairs = vec![
+        let index_pairs = [
             (0, 1),
             (1, 3),
             (3, 2),
@@ -89,8 +89,8 @@ impl BoundingBox {
             (2, 6),
         ];
 
-        for (p1, p2) in index_pairs {
-            plot.add_line(LineSegment::new(points[p1], points[p2]));
+        for (p1, p2) in &index_pairs {
+            plot.add_line(LineSegment::new(points[*p1], points[*p2]));
         }
     }
 }

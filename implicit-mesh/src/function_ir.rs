@@ -116,6 +116,10 @@ mod tests {
             .collect();
         root = parse_expression(&input, 0).unwrap();
         assert_similiar!(root.evaluate(&bindings), -495.5297);
+
+        input = "0".chars().collect();
+        root = parse_expression(&input, 0).unwrap();
+        assert_similiar!(root.evaluate(&bindings), 0.0);
     }
 
     #[test]
@@ -172,6 +176,7 @@ mod tests {
         // TDOD add more tests once behaivor settles
     }
 
+    #[test]
     fn test_function_inteval_2() {
         let mut input: Vec<char>;
         let mut root;
@@ -200,6 +205,11 @@ mod tests {
         );
 
         input = "x-y".chars().collect();
+        root = parse_expression(&input, 0).unwrap();
+        result = root.evaluate_interval(&bindings);
+        assert!(result[0].contains_zero());
+
+        input = "0".chars().collect();
         root = parse_expression(&input, 0).unwrap();
         result = root.evaluate_interval(&bindings);
         assert!(result[0].contains_zero());

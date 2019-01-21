@@ -65,8 +65,6 @@ impl App {
                 self.camera
                     .handle_mouse_input(MouseButton::Left, ButtonState::Pressed);
                 self.camera.handle_mouse_move(*x as f32, *y as f32);
-
-                log_1(&format!("cam: {:?}", self.camera.get_clipspace_transform()).into());
             }
             Message::MouseUp => {
                 self.camera
@@ -76,17 +74,15 @@ impl App {
                 self.camera.handle_mouse_move(*x as f32, *y as f32);
             }
             Message::Zoom(delta) => {
-                log_1(&format!("Zoom!").into());
                 self.camera.handle_scroll(*delta);
             }
             Message::EnterEquation(equation) => {
                 self.equation.clear();
                 self.equation += equation;
-                log_1(&format!("Start parse").into());
-
                 let input: Vec<char> = equation.chars().collect();
 
                 let a = implicit_mesh::parser::parse_expression(&input, 0).expect("not parseable");
+
                 let size_interval = Interval::new(-40.0 / 2.0, 40.0 / 2.0);
                 let bounding_box = BoundingBox {
                     x: size_interval.clone(),
@@ -96,7 +92,17 @@ impl App {
 
                 self.mtree = Some(MeshTree::new(a, bounding_box));
 
-                log_1(&"made mesh tree".into());
+                self.update_plot();
+                if let Some(mtree) = &self.mtree {
+                    log_1(
+                        &format!(
+                            "App: Made mtree, level: {}, solution cell count: {}",
+                            mtree.get_level(),
+                            mtree.get_solution_cell_count()
+                        )
+                        .into(),
+                    );
+                }
             }
             Message::Clear => {
                 self.equation.clear();
