@@ -93,6 +93,39 @@ impl BoundingBox {
             plot.add_line(LineSegment::new(points[*p1], points[*p2]));
         }
     }
+
+    pub fn add_floats(&self, result: &mut Vec<f32>) {
+        let mut points = Vec::new();
+        for x in &[self.x.min, self.x.max] {
+            for y in &[self.y.min, self.y.max] {
+                for z in &[self.z.min, self.z.max] {
+                    points.push(Point::new(*x, *y, *z));
+                }
+            }
+        }
+
+        // 2.) make a line buffer with appropriate endpoints
+        let index_pairs = [
+            (0, 1),
+            (1, 3),
+            (3, 2),
+            (2, 0),
+            (4, 5),
+            (5, 7),
+            (7, 6),
+            (6, 4),
+            (0, 4),
+            (1, 5),
+            (3, 7),
+            (2, 6),
+        ];
+
+        for (p1, p2) in &index_pairs {
+            let p_1 = points[*p1];
+            let p_2 = points[*p2];
+            result.extend(&[p_1.x, p_1.y, p_1.z, p_2.x, p_2.y, p_2.z]);
+        }
+    }
 }
 
 pub struct MeshTree<K: key::Key, F: Function> {
@@ -335,5 +368,38 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
                 plot.add_line(LineSegment::new(p1, p2));
             }
         }
+    }
+
+    pub fn get_edge_floats(&self) -> Vec<f32> {
+        let mut result = Vec::with_capacity(self.edge_set.len() * 6);
+
+        for (key1, key2) in &self.edge_set {
+            let c1 = &self.vertex_map.get(key1).unwrap();
+            let c2 = &self.vertex_map.get(key2).unwrap();
+
+            result.extend(&[c1.x, c1.y, c1.z, c2.x, c2.y, c2.z]);
+        }
+
+        result
+    }
+
+    pub fn get_vertex_floats(&self) -> Vec<f32> {
+        let mut result = Vec::with_capacity(self.vertex_map.len() * 3);
+
+        for vertex in self.vertex_map.values() {
+            result.extend(&[vertex.x, vertex.y, vertex.z]);
+        }
+
+        result
+    }
+
+    pub fn get_bounding_box_floats(&self) -> Vec<f32> {
+        let mut result = Vec::new();
+
+        for bb in self.solution_map.values() {
+            bb.add_floats(&mut result);
+        }
+
+        result
     }
 }

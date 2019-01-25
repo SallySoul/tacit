@@ -1,3 +1,5 @@
+use implicit_mesh::function_ir::Node;
+use implicit_mesh::mesh_tree::*;
 use wasm_bindgen::JsValue;
 use web_sys::console::log_1;
 use web_sys::WebGlRenderingContext as GL;
@@ -5,9 +7,8 @@ use web_sys::{WebGlBuffer, WebGlRenderingContext};
 
 use js_sys::{Float32Array, Uint16Array};
 
-use crate::shader::{ShaderKind, ShaderSystem};
+use crate::shader::{Shader, ShaderKind, ShaderSystem};
 use camera::Camera;
-use geoprim::Plot;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -96,47 +97,129 @@ impl IndexBuffer {
 
 struct PlotBuffers {
     point_count: i32,
-    line_count: i32,
-    point_vertices_float_buffer: ArrayBuffer,
-    line_vertices_float_buffer: ArrayBuffer,
-    line_indices_buffer: IndexBuffer,
+    point_vertices_buffer: ArrayBuffer,
+    point_indices_buffer: IndexBuffer,
+
+    edge_count: i32,
+    edge_vertices_buffer: ArrayBuffer,
+    edge_indices_buffer: IndexBuffer,
+
+    bb_edge_count: i32,
+    bb_vertices_buffer: ArrayBuffer,
+    bb_indices_buffer: IndexBuffer,
 }
 
 impl PlotBuffers {
-    fn new(gl_context: &WebGlRenderingContext, plot: &Plot) -> Result<PlotBuffers, JsValue> {
-        // Extract the coords from each point, and create an array buffer
-        let mut point_vertices_float_vec = Vec::with_capacity(plot.points.len() * 3);
-        for point in &plot.points {
-            point_vertices_float_vec.push(point.x);
-            point_vertices_float_vec.push(point.y);
-            point_vertices_float_vec.push(point.z);
-        }
-        let point_vertices_float_buffer = ArrayBuffer::new(gl_context, point_vertices_float_vec)?;
+    fn new(
+        gl_context: &WebGlRenderingContext,
+        mtree: &MeshTree<implicit_mesh::key::MortonKey, Node>,
+    ) -> Result<PlotBuffers, JsValue> {
+        let point_float_vec = mtree.get_vertex_floats();
+        let point_count = point_float_vec.len() / 3;
+        let point_vertices_buffer = ArrayBuffer::new(gl_context, point_float_vec)?;
+        let point_indices_buffer = IndexBuffer::new(gl_context, (0..point_count as u16).collect())?;
 
-        // Extract the coords from each point in each line, and create an array buffer
-        let mut line_vertices_float_vec = Vec::with_capacity(plot.points.len() * 3);
-        for line in &plot.lines {
-            for point in &[line.p1, line.p2] {
-                line_vertices_float_vec.push(point.x);
-                line_vertices_float_vec.push(point.y);
-                line_vertices_float_vec.push(point.z);
-            }
-        }
-        let line_vertices_float_buffer = ArrayBuffer::new(gl_context, line_vertices_float_vec)?;
+        let edge_float_vec = mtree.get_edge_floats();
+        let edge_vertex_count = edge_float_vec.len() / 3;
+        let edge_vertices_buffer = ArrayBuffer::new(gl_context, edge_float_vec)?;
+        let edge_indices_buffer =
+            IndexBuffer::new(gl_context, (0..edge_vertex_count as u16).collect())?;
 
-        // Line Indices in this case are sequential. Inefficient...
-        let line_index_count = plot.lines.len() * 2;
-        let mut line_indices_vec = Vec::with_capacity(line_index_count);
-        line_indices_vec.extend(0..line_index_count as u16);
-        let line_indices_buffer = IndexBuffer::new(gl_context, line_indices_vec)?;
+        let bb_float_vec = mtree.get_bounding_box_floats();
+        let bb_vertex_count = bb_float_vec.len() / 3;
+        let bb_vertices_buffer = ArrayBuffer::new(gl_context, bb_float_vec)?;
+        let bb_indices_buffer =
+            IndexBuffer::new(gl_context, (0..bb_vertex_count as u16).collect())?;
 
         Ok(PlotBuffers {
-            point_count: plot.points.len() as i32,
-            line_count: plot.lines.len() as i32,
-            point_vertices_float_buffer,
-            line_vertices_float_buffer,
-            line_indices_buffer,
+            point_count: point_count as i32,
+            point_vertices_buffer,
+            point_indices_buffer,
+            edge_count: (edge_vertex_count / 2) as i32,
+            edge_vertices_buffer,
+            edge_indices_buffer,
+            bb_edge_count: (bb_vertex_count / 2) as i32,
+            bb_vertices_buffer,
+            bb_indices_buffer,
         })
+    }
+
+    fn render_edges(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
+        let color_uniform = shader.get_uniform_location(&gl_context, "color");
+
+        let mut edge_color = Color::from_floats(0.2, 0.13, 0.54, 1.0);
+        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+
+        // Bind buffers
+        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.edge_vertices_buffer.gl_buffer));
+        gl_context.bind_buffer(
+            GL::ELEMENT_ARRAY_BUFFER,
+            Some(&self.edge_indices_buffer.gl_buffer),
+        );
+
+        // Get the attribute location
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+
+        // Point an attribute to the currently bound VBO
+        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+
+        // Enable the attribute
+        gl_context.enable_vertex_attrib_array(0);
+
+        gl_context.draw_elements_with_i32(GL::LINES, self.edge_count * 2, GL::UNSIGNED_SHORT, 0);
+    }
+
+    fn render_bb(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
+        let color_uniform = shader.get_uniform_location(&gl_context, "color");
+
+        let mut edge_color = Color::from_floats(0.4, 0.04, 0.23, 1.0);
+        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+
+        // Bind buffers
+        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.bb_vertices_buffer.gl_buffer));
+        gl_context.bind_buffer(
+            GL::ELEMENT_ARRAY_BUFFER,
+            Some(&self.bb_indices_buffer.gl_buffer),
+        );
+
+        // Get the attribute location
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+
+        // Point an attribute to the currently bound VBO
+        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+
+        // Enable the attribute
+        gl_context.enable_vertex_attrib_array(0);
+
+        gl_context.draw_elements_with_i32(GL::LINES, self.bb_edge_count * 2, GL::UNSIGNED_SHORT, 0);
+    }
+
+    fn render_points(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
+        let color_uniform = shader.get_uniform_location(&gl_context, "color");
+
+        let mut edge_color = Color::from_floats(0.33, 0.79, 0.85, 1.0);
+        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+
+        // Bind buffers
+        gl_context.bind_buffer(
+            GL::ARRAY_BUFFER,
+            Some(&self.point_vertices_buffer.gl_buffer),
+        );
+        gl_context.bind_buffer(
+            GL::ELEMENT_ARRAY_BUFFER,
+            Some(&self.point_indices_buffer.gl_buffer),
+        );
+
+        // Get the attribute location
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+
+        // Point an attribute to the currently bound VBO
+        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+
+        // Enable the attribute
+        gl_context.enable_vertex_attrib_array(0);
+
+        gl_context.draw_elements_with_i32(GL::POINTS, self.point_count, GL::UNSIGNED_SHORT, 0);
     }
 }
 
@@ -146,6 +229,9 @@ pub struct WebRenderer {
     shader_sys: ShaderSystem,
     plot_buffers: Option<PlotBuffers>,
     pub gl_context: WebGlRenderingContext,
+    draw_vertices: bool,
+    draw_edges: bool,
+    draw_bb: bool,
 }
 
 impl WebRenderer {
@@ -156,21 +242,30 @@ impl WebRenderer {
             shader_sys,
             plot_buffers: None,
             gl_context,
+            draw_vertices: crate::DRAW_VERTICES_START,
+            draw_edges: crate::DRAW_EDGES_START,
+            draw_bb: crate::DRAW_BB_START,
         }))
     }
 
-    pub fn set_plot(&mut self, plot: &Plot) -> Result<(), JsValue> {
-        log_1(&"Set_plot in renderer".into());
-        let plot_buffers = PlotBuffers::new(&self.gl_context, plot)?;
+    pub fn set_draw_vertices(&mut self, draw_flag: bool) {
+        self.draw_vertices = draw_flag;
+    }
 
-        log_1(
-            &format!(
-                "line_v_f_b len: {}",
-                plot_buffers.line_vertices_float_buffer.float_array.length()
-            )
-            .into(),
-        );
-        log_1(&format!("lines: {}", plot.lines.len()).into());
+    pub fn set_draw_edges(&mut self, draw_flag: bool) {
+        self.draw_edges = draw_flag;
+    }
+
+    pub fn set_draw_bb(&mut self, draw_flag: bool) {
+        self.draw_bb = draw_flag;
+    }
+
+    pub fn set_plot(
+        &mut self,
+        mtree: &MeshTree<implicit_mesh::key::MortonKey, Node>,
+    ) -> Result<(), JsValue> {
+        log_1(&"Set_plot in renderer".into());
+        let plot_buffers = PlotBuffers::new(&self.gl_context, mtree)?;
         self.plot_buffers = Some(plot_buffers);
         Ok(())
     }
@@ -191,14 +286,6 @@ impl WebRenderer {
         self.gl_context.viewport(0, 0, width, height);
 
         //self.gl_context.line_width(4.0);
-
-        match &self.plot_buffers {
-            Some(plot_buffers) => self.render_plot_buffers(plot_buffers, camera),
-            None => (),
-        };
-    }
-
-    fn render_plot_buffers(&self, plot_buffers: &PlotBuffers, camera: &Camera) {
         let shader = self.shader_sys.get_shader(&ShaderKind::Simple).unwrap();
 
         let object_transform_uniform =
@@ -212,46 +299,19 @@ impl WebRenderer {
             object_transform_mut_ref.as_mut(),
         );
 
-        let color_uniform =
-            shader.get_uniform_location(&self.gl_context, "color");
-
-        let mut line_color = color::WHITE;
-        self.gl_context.uniform4fv_with_f32_array(
-            color_uniform.as_ref(),
-            &mut line_color
-        );
-
-        // Bind buffers
-        self.gl_context.bind_buffer(
-            GL::ARRAY_BUFFER,
-            Some(&plot_buffers.line_vertices_float_buffer.gl_buffer),
-        );
-        self.gl_context.bind_buffer(
-            GL::ELEMENT_ARRAY_BUFFER,
-            Some(&plot_buffers.line_indices_buffer.gl_buffer),
-        );
-
-        // Get the attribute location
-        let position_attribute = self
-            .gl_context
-            .get_attrib_location(&shader.program, "position");
-
-        // Point an attribute to the currently bound VBO
-        self.gl_context
-            .vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
-
-        // Enable the attribute
-        self.gl_context.enable_vertex_attrib_array(0);
-
-        self.gl_context.draw_elements_with_i32(
-            GL::LINES,
-            plot_buffers.line_count * 2,
-            GL::UNSIGNED_SHORT,
-            0,
-        );
-
-        // Unbind buffers
-        self.gl_context.bind_buffer(GL::ARRAY_BUFFER, None);
-        self.gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, None);
+        match &self.plot_buffers {
+            Some(plot_buffers) => {
+                if self.draw_edges {
+                    plot_buffers.render_edges(&self.gl_context, shader);
+                }
+                if self.draw_bb {
+                    plot_buffers.render_bb(&self.gl_context, shader);
+                }
+                if self.draw_vertices {
+                    plot_buffers.render_points(&self.gl_context, shader);
+                }
+            }
+            None => (),
+        };
     }
 }

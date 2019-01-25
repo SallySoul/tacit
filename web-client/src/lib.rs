@@ -16,8 +16,8 @@ use crate::render::WebRendererWrapper;
 pub static APP_DIV_ID: &'static str = "tacit-app";
 pub static EQUATION_START: &'static str = "x^2 + y^2 + z^2 - 100";
 pub static DRAW_BB_START: bool = true;
-pub static DRAW_VERTICES_START: bool = false;
-pub static DRAW_EDGES_START: bool = false;
+pub static DRAW_VERTICES_START: bool = true;
+pub static DRAW_EDGES_START: bool = true;
 
 #[wasm_bindgen]
 pub struct WebClient {

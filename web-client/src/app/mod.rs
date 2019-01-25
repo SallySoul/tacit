@@ -15,9 +15,6 @@ pub struct App {
     pub camera: Camera,
     renderer: Option<WebRendererWrapper>,
     mtree: Option<MeshTree<implicit_mesh::key::MortonKey, Node>>,
-    draw_bb: bool,
-    draw_vertices: bool,
-    draw_edges: bool,
 }
 
 impl App {
@@ -27,9 +24,6 @@ impl App {
             camera: Camera::new(),
             renderer: None,
             mtree: None,
-            draw_bb: crate::DRAW_BB_START,
-            draw_vertices: crate::DRAW_VERTICES_START,
-            draw_edges: crate::DRAW_EDGES_START,
         }))
     }
 
@@ -39,22 +33,10 @@ impl App {
 
     pub fn update_plot(&mut self) {
         let mut plot = Plot::new();
-        if let Some(mtree) = &mut self.mtree {
-            mtree.add_to_plot(
-                self.draw_bb,
-                self.draw_vertices,
-                self.draw_edges,
-                false,
-                &mut plot,
-            );
-        } else {
-            return;
-        }
-
-        if let Some(renderer) = &self.renderer {
+        if let (Some(mtree), Some(renderer)) = (&mut self.mtree, &self.renderer) {
             renderer
                 .borrow_mut()
-                .set_plot(&plot)
+                .set_plot(&mtree)
                 .expect("Unable to set_plot for renderer");
         }
     }
@@ -155,17 +137,23 @@ impl App {
             }
             Message::DrawBoundingBoxes(draw_flag) => {
                 log_1(&format!("App: draw bb: {}", draw_flag).into());
-                self.draw_bb = *draw_flag;
+                if let Some(renderer) = &mut self.renderer {
+                    renderer.borrow_mut().set_draw_bb(*draw_flag);
+                }
                 self.update_plot();
             }
             Message::DrawVertices(draw_flag) => {
                 log_1(&format!("App: draw vertices: {}", draw_flag).into());
-                self.draw_vertices = *draw_flag;
+                if let Some(renderer) = &mut self.renderer {
+                    renderer.borrow_mut().set_draw_vertices(*draw_flag);
+                }
                 self.update_plot();
             }
             Message::DrawEdges(draw_flag) => {
                 log_1(&format!("App: draw edges: {}", draw_flag).into());
-                self.draw_edges = *draw_flag;
+                if let Some(renderer) = &mut self.renderer {
+                    renderer.borrow_mut().set_draw_edges(*draw_flag);
+                }
                 self.update_plot();
             }
             Message::DefaultCam => {

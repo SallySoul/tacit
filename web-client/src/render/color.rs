@@ -29,20 +29,18 @@ impl Deref for Color {
     }
 }
 
-
 impl DerefMut for Color {
     fn deref_mut(&mut self) -> &mut [f32] {
         &mut self.rgba
     }
 }
 
-
 impl Color {
-    fn from_floats(r: f32, g: f32, b: f32, a: f32) -> Color {
+    pub fn from_floats(r: f32, g: f32, b: f32, a: f32) -> Color {
         Color { rgba: [r, g, b, a] }
     }
 
-    fn from_bytyes(r: u8, g: u8, b: u8, a: u8) -> Color {
+    pub fn from_bytyes(r: u8, g: u8, b: u8, a: u8) -> Color {
         Color {
             rgba: [
                 r as f32 / 256.0,
