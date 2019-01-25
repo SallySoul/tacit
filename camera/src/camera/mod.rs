@@ -253,7 +253,7 @@ impl Camera {
 
     /// Get the world coordinates to clipspace coordinates transform
     /// If you are unsure, this is probably the transform you want from the camera.
-    pub fn get_clipspace_transform(&self) -> Matrix4<f32> {
+    pub fn get_world_to_clipspace_transform(&self) -> Matrix4<f32> {
         // We need to move to transform the world so that the origin is the cam's pos
         let inverse_pos = -self.get_position();
         let pos_transform = Matrix4::from_translation(inverse_pos);

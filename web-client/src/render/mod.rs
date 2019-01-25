@@ -11,6 +11,10 @@ use geoprim::Plot;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+mod color;
+
+use color::*;
+
 // The key is that we maintain a rust vec for ease, but package a Float32Array "view" into said vec
 struct ArrayBuffer {
     float_buffer: Vec<f32>,
@@ -200,7 +204,7 @@ impl WebRenderer {
         let object_transform_uniform =
             shader.get_uniform_location(&self.gl_context, "object_transform");
 
-        let mut object_transform_matrix = camera.get_clipspace_transform();
+        let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
         self.gl_context.uniform_matrix4fv_with_f32_array(
             object_transform_uniform.as_ref(),
@@ -208,7 +212,14 @@ impl WebRenderer {
             object_transform_mut_ref.as_mut(),
         );
 
-        // Draw plot lines
+        let color_uniform =
+            shader.get_uniform_location(&self.gl_context, "color");
+
+        let mut line_color = color::WHITE;
+        self.gl_context.uniform4fv_with_f32_array(
+            color_uniform.as_ref(),
+            &mut line_color
+        );
 
         // Bind buffers
         self.gl_context.bind_buffer(
