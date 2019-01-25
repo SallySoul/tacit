@@ -147,7 +147,7 @@ impl PlotBuffers {
     fn render_edges(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
         let color_uniform = shader.get_uniform_location(&gl_context, "color");
 
-        let mut edge_color = Color::from_floats(0.2, 0.13, 0.54, 1.0);
+        let mut edge_color = Color::from_floats(0.2, 0.33, 0.84, 1.0);
         gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
 
         // Bind buffers
@@ -172,7 +172,7 @@ impl PlotBuffers {
     fn render_bb(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
         let color_uniform = shader.get_uniform_location(&gl_context, "color");
 
-        let mut edge_color = Color::from_floats(0.4, 0.04, 0.23, 1.0);
+        let mut edge_color = Color::from_floats(0.68, 0.04, 0.23, 1.0);
         gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
 
         // Bind buffers
@@ -197,7 +197,7 @@ impl PlotBuffers {
     fn render_points(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
         let color_uniform = shader.get_uniform_location(&gl_context, "color");
 
-        let mut edge_color = Color::from_floats(0.33, 0.79, 0.85, 1.0);
+        let mut edge_color = Color::from_floats(0.33, 0.86, 0.42, 1.0);
         gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
 
         // Bind buffers
@@ -276,7 +276,7 @@ impl WebRenderer {
 
     pub fn render(&self, camera: &Camera) {
         // Parchment color?
-        self.gl_context.clear_color(0.952, 0.885, 0.792, 1.);
+        self.gl_context.clear_color(0.13, 0.11, 0.21, 1.);
         self.gl_context
             .clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
