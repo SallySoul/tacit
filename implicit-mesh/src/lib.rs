@@ -11,6 +11,5 @@ pub mod function_ir;
 pub mod interval;
 pub mod parser;
 pub mod parser_error;
-//pub mod mtree;
 pub mod cell_keys;
 pub mod mesh_tree;
