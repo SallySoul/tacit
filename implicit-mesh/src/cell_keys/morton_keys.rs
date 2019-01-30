@@ -1,6 +1,7 @@
-use itertools::Itertools;
 use std::fmt;
 use std::hash::Hash;
+
+use super::neighbors::*;
 
 pub const COMPONENT_BIT_COUNT: u32 = 21;
 
@@ -20,86 +21,6 @@ const CONVERSION_MASKS: [u64; 6] = [
     0b000000000011111000000000000000000000000000000001111111111111111,
     0b000000000000000000000000000000000000000000111111111111111111111,
 ];
-
-#[derive(Hash, Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
-pub enum NeighborRelation {
-    Less = -1,
-    Same = 0,
-    More = 1,
-}
-
-const NeighborRelations: [NeighborRelation; 3] = [
-    NeighborRelation::Same,
-    NeighborRelation::Less,
-    NeighborRelation::More,
-];
-
-const ComponentNeighbors: [Neighbor; 6] = [
-    Neighbor {
-        x: NeighborRelation::Same,
-        y: NeighborRelation::Same,
-        z: NeighborRelation::Less,
-    },
-    Neighbor {
-        x: NeighborRelation::Same,
-        y: NeighborRelation::Same,
-        z: NeighborRelation::More,
-    },
-    Neighbor {
-        x: NeighborRelation::Same,
-        y: NeighborRelation::Less,
-        z: NeighborRelation::Same,
-    },
-    Neighbor {
-        x: NeighborRelation::Same,
-        y: NeighborRelation::More,
-        z: NeighborRelation::Same,
-    },
-    Neighbor {
-        x: NeighborRelation::Less,
-        y: NeighborRelation::Same,
-        z: NeighborRelation::Same,
-    },
-    Neighbor {
-        x: NeighborRelation::More,
-        y: NeighborRelation::Same,
-        z: NeighborRelation::Same,
-    },
-];
-
-#[derive(Hash, Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
-pub struct Neighbor {
-    x: NeighborRelation,
-    y: NeighborRelation,
-    z: NeighborRelation,
-}
-
-impl Neighbor {
-    pub fn from_components(
-        x: NeighborRelation,
-        y: NeighborRelation,
-        z: NeighborRelation,
-    ) -> Neighbor {
-        Neighbor { x, y, z }
-    }
-
-    pub fn all_neighbors() -> impl Iterator<Item = Neighbor> {
-        NeighborRelations
-            .iter()
-            .cartesian_product(NeighborRelations.iter())
-            .cartesian_product(NeighborRelations.iter())
-            .skip(1) // The First is Same, Same, Same which is the identity, not a neighbor
-            .map(|((x, y), z)| Neighbor {
-                x: x.clone(),
-                y: y.clone(),
-                z: z.clone(),
-            })
-    }
-
-    pub fn component_neighbors() -> impl Iterator<Item = Neighbor> {
-        ComponentNeighbors.iter().map(|neighbor| neighbor.clone())
-    }
-}
 
 pub trait Key: Hash + Sized + Copy + Clone + PartialEq + Eq {
     fn root_key() -> Self;
@@ -292,14 +213,14 @@ mod tests {
     #[test]
     fn get_x() {
         let mut k = MortonKey::root_key();
-        for i in 0..5 {
+        for _i in 0..5 {
             k = k.child_key(4);
         }
         let x = k.get_component(0);
         assert_eq!(x, (2u32.pow(5) - 1) as u32);
 
         k = MortonKey::root_key();
-        for i in 0..COMPONENT_BIT_COUNT {
+        for _i in 0..COMPONENT_BIT_COUNT {
             k = k.child_key(4);
         }
         let x = k.get_component(0);
@@ -309,14 +230,14 @@ mod tests {
     #[test]
     fn get_y() {
         let mut k = MortonKey::root_key();
-        for i in 0..5 {
+        for _i in 0..5 {
             k = k.child_key(2);
         }
         let y = k.get_component(1);
         assert_eq!(y, (2u32.pow(5) - 1) as u32);
 
         k = MortonKey::root_key();
-        for i in 0..COMPONENT_BIT_COUNT {
+        for _i in 0..COMPONENT_BIT_COUNT {
             k = k.child_key(2);
         }
         let y = k.get_component(1);
@@ -326,14 +247,14 @@ mod tests {
     #[test]
     fn get_z() {
         let mut k = MortonKey::root_key();
-        for i in 0..5 {
+        for _i in 0..5 {
             k = k.child_key(1);
         }
         let z = k.get_component(2);
         assert_eq!(z, (2u32.pow(5) - 1) as u32);
 
         k = MortonKey::root_key();
-        for i in 0..COMPONENT_BIT_COUNT {
+        for _i in 0..COMPONENT_BIT_COUNT {
             k = k.child_key(1);
         }
         let z = k.get_component(2);
@@ -343,7 +264,7 @@ mod tests {
     #[test]
     fn get_all() {
         let mut k = MortonKey::root_key();
-        for i in 0..7 {
+        for _i in 0..7 {
             k = k.child_key(7);
         }
         let x = k.get_component(0);
@@ -354,7 +275,7 @@ mod tests {
         assert_eq!(z, (2u32.pow(7) - 1) as u32);
 
         k = MortonKey::root_key();
-        for i in 0..16 {
+        for _i in 0..16 {
             k = k.child_key(7);
         }
         let x = k.get_component(0);
@@ -435,7 +356,7 @@ mod tests {
 
     #[test]
     fn get_root_neighbors() {
-        let mut key = MortonKey::root_key();
+        let key = MortonKey::root_key();
 
         // All same returns self
         assert_eq!(
@@ -600,187 +521,6 @@ mod tests {
                 z: NeighborRelation::More
             }),
             Some(MortonKey(0b1111000111000111000111111))
-        );
-    }
-
-    #[test]
-    fn neighbors_and_order() {
-        let mut neighbors: Vec<Neighbor> = Neighbor::component_neighbors().collect();
-        neighbors.sort();
-
-        assert_eq!(
-            neighbors,
-            vec![
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Same,
-                },
-            ]
-        );
-
-        let mut neighbors: Vec<Neighbor> = Neighbor::all_neighbors().collect();
-        neighbors.sort();
-
-        assert_eq!(
-            neighbors,
-            vec![
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Less,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::Same,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Less,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::Same,
-                    z: NeighborRelation::More,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Less,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::Same,
-                },
-                Neighbor {
-                    x: NeighborRelation::More,
-                    y: NeighborRelation::More,
-                    z: NeighborRelation::More,
-                },
-            ]
         );
     }
 }

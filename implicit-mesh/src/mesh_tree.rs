@@ -1,13 +1,11 @@
+use super::cell_keys::{Key, MortonKey, Neighbor};
+use super::interval::Interval;
 use crate::function::*;
 use crate::geoprim::*;
 use crate::interval::contains_zero;
-use crate::interval::Interval;
-use crate::key;
-use crate::key::Key;
 use cgmath::Vector3;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use std::io::Write;
 use std::iter::FromIterator;
 use std::iter::Iterator;
 
@@ -128,7 +126,7 @@ impl BoundingBox {
     }
 }
 
-pub struct MeshTree<K: key::Key, F: Function> {
+pub struct MeshTree<K: Key, F: Function> {
     function: Box<F>,
     pub level: u32,
     solution_map: HashMap<K, BoundingBox>,
@@ -137,8 +135,8 @@ pub struct MeshTree<K: key::Key, F: Function> {
     triangle_set: HashSet<[K; 3]>,
 }
 
-impl<F: Function> MeshTree<key::MortonKey, F> {
-    pub fn new(f: Box<F>, bb: BoundingBox) -> MeshTree<key::MortonKey, F> {
+impl<F: Function> MeshTree<MortonKey, F> {
+    pub fn new(f: Box<F>, bb: BoundingBox) -> MeshTree<MortonKey, F> {
         let mut result = MeshTree {
             function: f,
             level: 0,
@@ -148,7 +146,7 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
             triangle_set: HashSet::new(),
         };
 
-        let root_key = key::MortonKey::root_key();
+        let root_key = MortonKey::root_key();
         if bb.contains_root(&result.function) {
             result.solution_map.insert(root_key, bb);
         }
@@ -173,7 +171,7 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
         let mut new_solution_map = HashMap::new();
 
         for (key, bb) in &self.solution_map {
-            let child_keys: Vec<key::MortonKey> = (0..8u64).map(|i| key.child_key(i)).collect();
+            let child_keys: Vec<MortonKey> = (0..8u64).map(|i| key.child_key(i)).collect();
             let child_bb = bb.split();
 
             for i in 0..8 {
@@ -196,7 +194,7 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
     }
 
     pub fn generate_edge_set(&mut self) {
-        let key_set: HashSet<key::MortonKey> =
+        let key_set: HashSet<MortonKey> =
             HashSet::from_iter(self.solution_map.keys().map(|k| k.clone()));
         for key in &key_set {
             key.clone()
@@ -211,7 +209,7 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
     pub fn relax_vertices(&mut self) {
         let mut new_vertex_map = HashMap::new();
         for (key, vertex) in &self.vertex_map {
-            let neighbors: Vec<key::MortonKey> = key.clone().component_neighbors().collect();
+            let neighbors: Vec<MortonKey> = key.clone().component_neighbors().collect();
 
             let mut sum = Vector3::new(0.0, 0.0, 0.0);
             let mut count = 0;
@@ -239,8 +237,8 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
         self.vertex_map = new_vertex_map;
     }
 
-    pub fn add_vertex_triangles(&mut self, vertex_key: key::MortonKey) {
-        let maybe_neighbors: Vec<Option<key::MortonKey>> = key::Neighbor::component_neighbors()
+    pub fn add_vertex_triangles(&mut self, vertex_key: MortonKey) {
+        let maybe_neighbors: Vec<Option<MortonKey>> = Neighbor::component_neighbors()
             .map(|neighbor| vertex_key.neighbor_key(neighbor))
             .map(|maybe_neighbor_key| {
                 if maybe_neighbor_key.is_none() {
@@ -290,7 +288,7 @@ impl<F: Function> MeshTree<key::MortonKey, F> {
     }
 
     pub fn generate_triangle_set(&mut self) {
-        let keys: Vec<key::MortonKey> = self.solution_map.keys().map(|k| k.clone()).collect();
+        let keys: Vec<MortonKey> = self.solution_map.keys().map(|k| k.clone()).collect();
         for key in keys {
             self.add_vertex_triangles(key.clone());
         }

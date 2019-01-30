@@ -1,6 +1,7 @@
 use crate::render::WebRendererWrapper;
 use camera::{ButtonState, Camera, MouseButton};
 use geoprim::Plot;
+use implicit_mesh::cell_keys::morton_keys::MortonKey;
 use implicit_mesh::function_ir::Node;
 use implicit_mesh::interval::Interval;
 use implicit_mesh::mesh_tree::*;
@@ -14,7 +15,7 @@ pub struct App {
     equation: String,
     pub camera: Camera,
     renderer: Option<WebRendererWrapper>,
-    mtree: Option<MeshTree<implicit_mesh::key::MortonKey, Node>>,
+    mtree: Option<MeshTree<MortonKey, Node>>,
 }
 
 impl App {

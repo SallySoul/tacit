@@ -1,3 +1,4 @@
+use implicit_mesh::cell_keys::morton_keys::MortonKey;
 use implicit_mesh::function_ir::Node;
 use implicit_mesh::mesh_tree::*;
 use wasm_bindgen::JsValue;
@@ -112,7 +113,7 @@ struct PlotBuffers {
 impl PlotBuffers {
     fn new(
         gl_context: &WebGlRenderingContext,
-        mtree: &MeshTree<implicit_mesh::key::MortonKey, Node>,
+        mtree: &MeshTree<MortonKey, Node>,
     ) -> Result<PlotBuffers, JsValue> {
         let point_float_vec = mtree.get_vertex_floats();
         let point_count = point_float_vec.len() / 3;
@@ -260,10 +261,7 @@ impl WebRenderer {
         self.draw_bb = draw_flag;
     }
 
-    pub fn set_plot(
-        &mut self,
-        mtree: &MeshTree<implicit_mesh::key::MortonKey, Node>,
-    ) -> Result<(), JsValue> {
+    pub fn set_plot(&mut self, mtree: &MeshTree<MortonKey, Node>) -> Result<(), JsValue> {
         log_1(&"Set_plot in renderer".into());
         let plot_buffers = PlotBuffers::new(&self.gl_context, mtree)?;
         self.plot_buffers = Some(plot_buffers);

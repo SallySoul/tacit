@@ -79,8 +79,6 @@ mod tests {
     use super::*;
     use crate::parser::parse_expression;
     use std::collections::HashMap;
-    #[macro_use]
-    use crate::util;
 
     #[test]
     fn test_function_evaluate() {

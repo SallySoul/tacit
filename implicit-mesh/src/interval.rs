@@ -57,7 +57,7 @@ impl Interval {
                 min: 1.0 / max,
                 max: f32::INFINITY,
             },
-            (min, max) => Interval {
+            (_min, _max) => Interval {
                 min: -f32::INFINITY,
                 max: f32::INFINITY,
             },

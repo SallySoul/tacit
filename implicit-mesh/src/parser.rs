@@ -198,7 +198,6 @@ fn parse_number<'a>(input: &'a [char], current_index: usize) -> ParseResult<(BNo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     fn assert_constant(result: &Node, expected: f32) {
         if let &Node::Constant(ref c) = result {

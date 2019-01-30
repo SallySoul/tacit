@@ -13,11 +13,11 @@ pub struct ConstFunction {
 }
 
 impl Function for ConstFunction {
-    fn evaluate(&self, x: f32, y: f32, z: f32) -> f32 {
+    fn evaluate(&self, _x: f32, _y: f32, _z: f32) -> f32 {
         self.c
     }
 
-    fn evaluate_interval(&self, bindings: &HashMap<char, Interval>) -> Vec<Interval> {
+    fn evaluate_interval(&self, _bindings: &HashMap<char, Interval>) -> Vec<Interval> {
         vec![Interval {
             min: self.c,
             max: self.c,
