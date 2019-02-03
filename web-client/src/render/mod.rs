@@ -82,13 +82,13 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::LINES, self.edge_count * 2, GL::UNSIGNED_SHORT, 0);
     }
@@ -107,13 +107,13 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::LINES, self.bb_edge_count * 2, GL::UNSIGNED_SHORT, 0);
     }
@@ -135,13 +135,13 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::POINTS, self.point_count, GL::UNSIGNED_SHORT, 0);
     }

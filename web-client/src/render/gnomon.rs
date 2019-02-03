@@ -99,6 +99,7 @@ impl Gnomon {
 
     pub fn render(&mut self, gl_context: &WebGlRenderingContext, shader: &Shader) {
         let color_uniform = shader.get_uniform_location(&gl_context, "color");
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Draw_x
         gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut self.x_color);
@@ -106,10 +107,15 @@ impl Gnomon {
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.x_vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
 
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
-
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(
+            position_attribute as u32,
+            3,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
 
         // Enable the attribute
         gl_context.enable_vertex_attrib_array(0);
@@ -122,13 +128,13 @@ impl Gnomon {
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.y_vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
 
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::LINES, 8, GL::UNSIGNED_SHORT, 0);
 
@@ -141,7 +147,7 @@ impl Gnomon {
         let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
 
         // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
         gl_context.enable_vertex_attrib_array(0);
