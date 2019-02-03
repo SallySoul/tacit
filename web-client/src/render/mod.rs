@@ -38,8 +38,6 @@ impl WebRenderer {
         let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
         let fade_background = fade_background::FadeBackground::new(&gl_context)?;
 
-        let _2 = crate::shader::ShaderSystem2::new(&gl_context);
-
         Ok(Rc::new(RefCell::new(WebRenderer {
             shader_sys,
             plot_buffers: None,

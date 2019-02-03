@@ -47,7 +47,7 @@ impl Color {
         Color { rgba: [r, g, b, a] }
     }
     /*
-        pub fn from_bytyes(r: u8, g: u8, b: u8, a: u8) -> Color {
+        pub fn from_bytes(r: u8, g: u8, b: u8, a: u8) -> Color {
             Color {
                 rgba: [
                     r as f32 / 256.0,

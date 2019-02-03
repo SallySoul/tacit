@@ -67,26 +67,26 @@ impl PlotBuffers {
         draw_bb: bool,
         draw_points: bool,
     ) {
-        let shader = shader_sys.use_program(gl_context, ShaderKind::Simple);
+        shader_sys.use_program(gl_context, ShaderKind::Simple);
 
         // Load in the object transfrom
-        let object_transform_uniform = shader.get_uniform_location(gl_context, "object_transform");
+        let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform; 
 
         let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
 
         gl_context.uniform_matrix4fv_with_f32_array(
-            object_transform_uniform.as_ref(),
+            Some(object_transform_uniform),
             false,
             object_transform_mut_ref.as_mut(),
         );
 
-        let color_uniform = shader.get_uniform_location(&gl_context, "color");
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
+        let color_uniform = &shader_sys.simple_shader.color_uniform;
+        let position_attribute = shader_sys.simple_shader.position_attribute; 
 
         if draw_edges {
             let mut edge_color = Color::from_floats(0.2, 0.33, 0.84, 1.0);
-            gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+            gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut edge_color);
 
             gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.edge_vertices_buffer.gl_buffer));
             gl_context.bind_buffer(
@@ -112,7 +112,7 @@ impl PlotBuffers {
 
         if draw_bb {
             let mut edge_color = Color::from_floats(0.68, 0.04, 0.23, 1.0);
-            gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+            gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut edge_color);
 
             gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.bb_vertices_buffer.gl_buffer));
             gl_context.bind_buffer(
@@ -138,7 +138,7 @@ impl PlotBuffers {
 
         if draw_points {
             let mut edge_color = Color::from_floats(0.33, 0.86, 0.42, 1.0);
-            gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
+            gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut edge_color);
 
             gl_context.bind_buffer(
                 GL::ARRAY_BUFFER,

@@ -42,28 +42,23 @@ impl FadeBackground {
     }
 
     pub fn render(&self, gl_context: &WebGlRenderingContext, shader_system: &ShaderSystem) {
-        let shader = shader_system.use_program(gl_context, ShaderKind::FadeBackground);
+        shader_system.use_program(gl_context, ShaderKind::FadeBackground);
 
         // Setup the postion attribute
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
+        let position_attribute = shader_system.fade_background_shader.position_attribute; 
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
         gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
         gl_context.enable_vertex_attrib_array(position_attribute);
 
         // Setup the color attribute
-        let color_attribute_signed = gl_context.get_attrib_location(&shader.program, "a_color");
-
-        if color_attribute_signed < 0 {
-            panic!("Can't get a_color attribute");
-        }
-
-        let color_attribute = color_attribute_signed as u32;
-
+        let color_attribute = shader_system.fade_background_shader.color_attribute;
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.colors.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
         gl_context.vertex_attrib_pointer_with_i32(color_attribute, 4, GL::FLOAT, false, 0, 0);
         gl_context.enable_vertex_attrib_array(color_attribute);
+
+        // Draw
         gl_context.draw_elements_with_i32(GL::TRIANGLES, 6, GL::UNSIGNED_SHORT, 0);
     }
 }

@@ -77,24 +77,24 @@ impl Gnomon {
         shader_sys: &ShaderSystem,
         camera: &Camera,
     ) {
-        let shader = shader_sys.use_program(gl_context, ShaderKind::Simple);
+        shader_sys.use_program(gl_context, ShaderKind::Simple);
 
-        let object_transform_uniform = shader.get_uniform_location(gl_context, "object_transform");
+        let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform;
 
         let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
 
         gl_context.uniform_matrix4fv_with_f32_array(
-            object_transform_uniform.as_ref(),
+            Some(object_transform_uniform),
             false,
             object_transform_mut_ref.as_mut(),
         );
 
-        let color_uniform = shader.get_uniform_location(&gl_context, "color");
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
+        let color_uniform = &shader_sys.simple_shader.color_uniform;
+        let position_attribute = shader_sys.simple_shader.position_attribute; 
 
         // Draw_x
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut self.x_color);
+        gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut self.x_color);
 
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.x_vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
@@ -108,12 +108,10 @@ impl Gnomon {
         gl_context.draw_elements_with_i32(GL::LINES, 8, GL::UNSIGNED_SHORT, 0);
 
         // Draw_y
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut self.y_color);
+        gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut self.y_color);
 
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.y_vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
-
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
@@ -124,12 +122,10 @@ impl Gnomon {
         gl_context.draw_elements_with_i32(GL::LINES, 8, GL::UNSIGNED_SHORT, 0);
 
         // Draw_z
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut self.z_color);
+        gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut self.z_color);
 
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.z_vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
-
-        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
