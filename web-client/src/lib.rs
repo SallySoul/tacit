@@ -18,6 +18,7 @@ pub static DRAW_BB_START: bool = true;
 pub static DRAW_VERTICES_START: bool = true;
 pub static DRAW_EDGES_START: bool = true;
 pub static DRAW_GNOMON_START: bool = false;
+pub static FOV_START_VALUE: f32 = std::f32::consts::PI / 2.0;
 
 #[wasm_bindgen]
 pub struct WebClient {

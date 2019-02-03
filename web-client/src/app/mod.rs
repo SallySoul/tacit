@@ -164,6 +164,9 @@ impl App {
                 let v = self.camera.get_world_to_camera_transform();
                 log_1(&format!("VM: {:?}", v).into());
             }
+            Message::SetFov(fov) => {
+                self.camera.set_field_of_view(*fov);
+            }
         }
     }
 }
@@ -184,4 +187,5 @@ pub enum Message {
     DrawGnomon(bool),
     DefaultCam,
     Debug,
+    SetFov(f32),
 }

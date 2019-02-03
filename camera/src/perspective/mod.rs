@@ -47,3 +47,28 @@ pub fn fov_perspective_transform(
 pub fn fov_near_distance(field_of_view: f32) -> f32 {
     1.0 / (field_of_view / 2.0).tan()
 }
+
+/*
+// Create an orthographic transform
+/// That takes eye space coordiantes into clip space
+pub fn orthographic_transform(
+    left: f32,
+    right: f32,
+    bottom: f32,
+    top: f32,
+) -> Matrix4<f32> {
+    let r1c1 = 0.0;
+
+    let r2c2 = 0.0;
+
+    let r3c3 = 0.0;
+
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    Matrix4::new(
+        r1c1, 0.0,  0.0,  0.0,
+        0.0,  r2c2, 0.0,  0.0,
+        r1c3, r2c3, r3c3, -1.0,
+        0.0,  0.0,  r3c4, 0.0
+    )
+}
+*/

@@ -81,6 +81,12 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
 
     {
         let app = Rc::clone(&app);
+        let element = create_fov_slider(app)?;
+        controls.append_child(&element)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
         let element = create_debug_button(app)?;
         controls.append_child(&element)?;
     }
@@ -295,8 +301,6 @@ fn create_draw_edges_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
         let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
         let draw_flag = input_elem.checked();
 
-        log_1(&format!("Handler: e: {:?}", event).into());
-
         app.borrow_mut()
             .handle_message(&Message::DrawEdges(draw_flag));
     };
@@ -310,6 +314,68 @@ fn create_draw_edges_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     .create_element()?;
 
     Ok(draw_control)
+}
+
+fn create_fov_slider(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let field_of_view = input_elem.value().parse().unwrap();
+
+        app.borrow_mut()
+            .handle_message(&Message::SetFov(field_of_view));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let fov_control = Slider {
+        min: 0.0,
+        max: std::f32::consts::PI,
+        step: 0.1,
+        start: crate::FOV_START_VALUE,
+        label: "Field of View",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(fov_control)
+}
+
+struct Slider {
+    min: f32,
+    max: f32,
+    step: f32,
+    start: f32,
+    label: &'static str,
+    closure: Closure<FnMut(web_sys::Event)>,
+}
+
+impl Slider {
+    fn create_element(self) -> Result<HtmlElement, JsValue> {
+        let window = window().unwrap();
+        let document = window.document().unwrap();
+
+        let slider: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+        slider.set_type("range");
+        slider.set_min(&format!("{}", self.min));
+        slider.set_max(&format!("{}", self.max));
+        slider.set_step(&format!("{}", self.step));
+        slider.set_value(&format!("{}", self.start));
+
+        let closure = self.closure;
+        slider.set_oninput(Some(closure.as_ref().unchecked_ref()));
+        closure.forget();
+
+        let label = document.create_element("div")?;
+        label.set_inner_html(self.label);
+
+        let container = document.create_element("div")?;
+        container.append_child(&label)?;
+        container.append_child(&slider)?;
+
+        let container: HtmlElement = container.dyn_into()?;
+        container.style().set_property("margin-bottom", "15px")?;
+
+        Ok(container)
+    }
 }
 
 struct Checkbox {
