@@ -41,16 +41,18 @@ impl ShaderSystem {
         self.programs.get(shader_kind)
     }
 
-    /// Use a shader program. We cache the last used shader program to avoid unnecessary
-    /// calls to the GPU.
-    pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) {
-        if *self.active_program.borrow() == shader_kind {
-            return;
-        }
+    /*
+        /// Use a shader program. We cache the last used shader program to avoid unnecessary
+        /// calls to the GPU.
+        pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) {
+            if *self.active_program.borrow() == shader_kind {
+                return;
+            }
 
-        gl.use_program(Some(&self.programs.get(&shader_kind).unwrap().program));
-        *self.active_program.borrow_mut() = shader_kind;
-    }
+            gl.use_program(Some(&self.programs.get(&shader_kind).unwrap().program));
+            *self.active_program.borrow_mut() = shader_kind;
+        }
+    */
 }
 
 /// One per ShaderKind

@@ -1,6 +1,5 @@
 use crate::render::WebRendererWrapper;
 use camera::{ButtonState, Camera, MouseButton};
-use geoprim::Plot;
 use implicit_mesh::cell_keys::morton_keys::MortonKey;
 use implicit_mesh::function_ir::Node;
 use implicit_mesh::interval::Interval;
@@ -33,7 +32,6 @@ impl App {
     }
 
     pub fn update_plot(&mut self) {
-        let mut plot = Plot::new();
         if let (Some(mtree), Some(renderer)) = (&mut self.mtree, &self.renderer) {
             renderer
                 .borrow_mut()
@@ -101,7 +99,6 @@ impl App {
                     .update(*time_delta, *window_width, *window_height);
             }
             Message::NextLevel => {
-                let mut plot = Plot::new();
                 match &mut self.mtree {
                     Some(mtree) => {
                         mtree.next_level();
@@ -137,28 +134,35 @@ impl App {
                 self.update_plot();
             }
             Message::DrawBoundingBoxes(draw_flag) => {
-                log_1(&format!("App: draw bb: {}", draw_flag).into());
                 if let Some(renderer) = &mut self.renderer {
                     renderer.borrow_mut().set_draw_bb(*draw_flag);
                 }
                 self.update_plot();
             }
             Message::DrawVertices(draw_flag) => {
-                log_1(&format!("App: draw vertices: {}", draw_flag).into());
                 if let Some(renderer) = &mut self.renderer {
                     renderer.borrow_mut().set_draw_vertices(*draw_flag);
                 }
                 self.update_plot();
             }
             Message::DrawEdges(draw_flag) => {
-                log_1(&format!("App: draw edges: {}", draw_flag).into());
                 if let Some(renderer) = &mut self.renderer {
                     renderer.borrow_mut().set_draw_edges(*draw_flag);
                 }
                 self.update_plot();
             }
+            Message::DrawGnomon(draw_flag) => {
+                if let Some(renderer) = &mut self.renderer {
+                    renderer.borrow_mut().set_draw_gnomon(*draw_flag);
+                }
+                self.update_plot();
+            }
             Message::DefaultCam => {
                 self.camera.transition_to_default();
+            }
+            Message::Debug => {
+                let v = self.camera.get_world_to_camera_transform();
+                log_1(&format!("VM: {:?}", v).into());
             }
         }
     }
@@ -177,5 +181,7 @@ pub enum Message {
     DrawBoundingBoxes(bool),
     DrawVertices(bool),
     DrawEdges(bool),
+    DrawGnomon(bool),
     DefaultCam,
+    Debug,
 }

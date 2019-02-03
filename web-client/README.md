@@ -23,3 +23,7 @@ This crate contains the source for a web app frontend for the tacit plotter.
 * Some notes on bind ordering.
 
   [Should unbind buffers?](https://gamedev.stackexchange.com/questions/90471/should-unbind-buffers)
+
+* This tutorial on bill boards, and how to orient them compliments the line drawing article.
+
+  [opengl-tutorial: Billboards](http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/)

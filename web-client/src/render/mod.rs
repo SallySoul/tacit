@@ -4,97 +4,20 @@ use implicit_mesh::mesh_tree::*;
 use wasm_bindgen::JsValue;
 use web_sys::console::log_1;
 use web_sys::WebGlRenderingContext as GL;
-use web_sys::{WebGlBuffer, WebGlRenderingContext};
-
-use js_sys::{Float32Array, Uint16Array};
+use web_sys::WebGlRenderingContext;
 
 use crate::shader::{Shader, ShaderKind, ShaderSystem};
 use camera::Camera;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+mod buffers;
 mod color;
+mod gnomon;
+
+use buffers::{ArrayBuffer, IndexBuffer};
 
 use color::*;
-
-// The key is that we maintain a rust vec for ease, but package a Float32Array "view" into said vec
-struct ArrayBuffer {
-    float_buffer: Vec<f32>,
-    float_array: Float32Array,
-    gl_buffer: WebGlBuffer,
-}
-
-impl ArrayBuffer {
-    fn new(
-        gl_context: &WebGlRenderingContext,
-        float_buffer: Vec<f32>,
-    ) -> Result<ArrayBuffer, JsValue> {
-        let float_array;
-        unsafe {
-            float_array = Float32Array::view(&float_buffer);
-        }
-
-        let gl_buffer = gl_context
-            .create_buffer()
-            .ok_or("Failed to create vertex buffer")?;
-
-        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&gl_buffer));
-
-        gl_context.buffer_data_with_array_buffer_view(
-            GL::ARRAY_BUFFER,
-            &float_array,
-            GL::STATIC_DRAW,
-        );
-
-        // Unbind the buffer to be safe
-        gl_context.bind_buffer(GL::ARRAY_BUFFER, None);
-
-        Ok(ArrayBuffer {
-            float_buffer,
-            float_array,
-            gl_buffer,
-        })
-    }
-}
-
-struct IndexBuffer {
-    u16_buffer: Vec<u16>,
-    u16_array: Uint16Array,
-    gl_buffer: WebGlBuffer,
-}
-
-impl IndexBuffer {
-    fn new(
-        gl_context: &WebGlRenderingContext,
-        u16_buffer: Vec<u16>,
-    ) -> Result<IndexBuffer, JsValue> {
-        let u16_array;
-        unsafe {
-            u16_array = Uint16Array::view(&u16_buffer);
-        }
-
-        let gl_buffer = gl_context
-            .create_buffer()
-            .ok_or("Failed to create index buffer")?;
-
-        gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&gl_buffer));
-
-        gl_context.buffer_data_with_array_buffer_view(
-            GL::ELEMENT_ARRAY_BUFFER,
-            &u16_array,
-            GL::STATIC_DRAW,
-        );
-
-        // Unbind the buffer to be safe
-        gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, None);
-
-        Ok(IndexBuffer {
-            u16_buffer,
-            u16_array,
-            gl_buffer,
-        })
-    }
-}
 
 struct PlotBuffers {
     point_count: i32,
@@ -159,7 +82,7 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
@@ -184,7 +107,7 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
@@ -212,7 +135,7 @@ impl PlotBuffers {
         );
 
         // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position");
+        let _position_attribute = gl_context.get_attrib_location(&shader.program, "position");
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
@@ -233,20 +156,25 @@ pub struct WebRenderer {
     draw_vertices: bool,
     draw_edges: bool,
     draw_bb: bool,
+    draw_gnomon: bool,
+    gnomon: gnomon::Gnomon,
 }
 
 impl WebRenderer {
-    pub fn new_wrapper(gl_context: WebGlRenderingContext) -> WebRendererWrapper {
+    pub fn new_wrapper(gl_context: WebGlRenderingContext) -> Result<WebRendererWrapper, JsValue> {
         let shader_sys = ShaderSystem::new(&gl_context);
+        let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
 
-        Rc::new(RefCell::new(WebRenderer {
+        Ok(Rc::new(RefCell::new(WebRenderer {
             shader_sys,
             plot_buffers: None,
             gl_context,
             draw_vertices: crate::DRAW_VERTICES_START,
             draw_edges: crate::DRAW_EDGES_START,
             draw_bb: crate::DRAW_BB_START,
-        }))
+            draw_gnomon: crate::DRAW_GNOMON_START,
+            gnomon,
+        })))
     }
 
     pub fn set_draw_vertices(&mut self, draw_flag: bool) {
@@ -261,6 +189,10 @@ impl WebRenderer {
         self.draw_bb = draw_flag;
     }
 
+    pub fn set_draw_gnomon(&mut self, draw_flag: bool) {
+        self.draw_gnomon = draw_flag;
+    }
+
     pub fn set_plot(&mut self, mtree: &MeshTree<MortonKey, Node>) -> Result<(), JsValue> {
         log_1(&"Set_plot in renderer".into());
         let plot_buffers = PlotBuffers::new(&self.gl_context, mtree)?;
@@ -272,7 +204,7 @@ impl WebRenderer {
         self.plot_buffers = None;
     }
 
-    pub fn render(&self, camera: &Camera) {
+    pub fn render(&mut self, camera: &Camera) {
         // Parchment color?
         self.gl_context.clear_color(0.13, 0.11, 0.21, 1.);
         self.gl_context
@@ -291,6 +223,7 @@ impl WebRenderer {
 
         let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
+
         self.gl_context.uniform_matrix4fv_with_f32_array(
             object_transform_uniform.as_ref(),
             false,
@@ -307,6 +240,9 @@ impl WebRenderer {
                 }
                 if self.draw_vertices {
                     plot_buffers.render_points(&self.gl_context, shader);
+                }
+                if self.draw_gnomon {
+                    self.gnomon.render(&self.gl_context, shader);
                 }
             }
             None => (),

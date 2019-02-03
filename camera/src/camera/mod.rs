@@ -251,14 +251,29 @@ impl Camera {
         Basis3::from(self.rotation)
     }
 
-    /// Get the world coordinates to clipspace coordinates transform
-    /// If you are unsure, this is probably the transform you want from the camera.
-    pub fn get_world_to_clipspace_transform(&self) -> Matrix4<f32> {
-        // We need to move to transform the world so that the origin is the cam's pos
+    pub fn get_camera_up(&self) -> Vector3<f32> {
+        Vector3::new(0.0, 0.0, 0.0)
+    }
+
+    pub fn get_camera_right(&self) -> Vector3<f32> {
+        Vector3::new(0.0, 0.0, 0.0)
+    }
+
+    /// world to camera transform, also known as ViewMatrix
+    pub fn get_world_to_camera_transform(&self) -> Matrix4<f32> {
+        // We need to transform the world so that the origin is the cam's pos
         let inverse_pos = -self.get_position();
         let pos_transform = Matrix4::from_translation(inverse_pos);
 
         let rotation_transform = Matrix3::from(self.get_rotation().invert());
+
+        Matrix4::from(rotation_transform) * pos_transform
+    }
+
+    /// Get the world coordinates to clipspace coordinates transform
+    /// If you are unsure, this is probably the transform you want from the camera.
+    pub fn get_world_to_clipspace_transform(&self) -> Matrix4<f32> {
+        let world_to_camera_transform = self.get_world_to_camera_transform();
 
         let perspective_transform = perspective::fov_perspective_transform(
             self.field_of_view,
@@ -268,7 +283,7 @@ impl Camera {
         );
 
         // We need to an inverted order of operations becuase the matrix is inverted(?)
-        perspective_transform * Matrix4::from(rotation_transform) * pos_transform
+        perspective_transform * world_to_camera_transform
     }
 
     // When dealing with mouse input we need to translate the pixel location into

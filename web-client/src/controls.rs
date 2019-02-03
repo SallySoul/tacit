@@ -69,9 +69,22 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
 
     {
         let app = Rc::clone(&app);
+        let element = create_draw_gnomon_checkbox(app)?;
+        controls.append_child(&element)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
         let element = create_default_cam_button(app)?;
         controls.append_child(&element)?;
     }
+
+    {
+        let app = Rc::clone(&app);
+        let element = create_debug_button(app)?;
+        controls.append_child(&element)?;
+    }
+
     Ok(())
 }
 
@@ -198,6 +211,25 @@ fn create_clear_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     Ok(button.dyn_into()?)
 }
 
+fn create_debug_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        log_1(&format!("Event: {:?}", event).into());
+        app.borrow_mut().handle_message(&Message::Debug);
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+
+    let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
+    button.set_type("button");
+    button.set_value("Debug");
+    button.set_onclick(Some(closure.as_ref().unchecked_ref()));
+    closure.forget();
+
+    Ok(button.dyn_into()?)
+}
+
 fn create_draw_bb_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let handler = move |event: web_sys::Event| {
         let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
@@ -211,6 +243,26 @@ fn create_draw_bb_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let draw_control = Checkbox {
         start_checked: crate::DRAW_BB_START,
         label: "Draw Bounding Boxes",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(draw_control)
+}
+
+fn create_draw_gnomon_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let draw_flag = input_elem.checked();
+
+        app.borrow_mut()
+            .handle_message(&Message::DrawGnomon(draw_flag));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let draw_control = Checkbox {
+        start_checked: crate::DRAW_GNOMON_START,
+        label: "Draw Gnomon",
         closure,
     }
     .create_element()?;
@@ -258,45 +310,6 @@ fn create_draw_edges_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     .create_element()?;
 
     Ok(draw_control)
-}
-
-struct Slider {
-    min: f32,
-    max: f32,
-    step: f32,
-    start: f32,
-    label: &'static str,
-    closure: Closure<FnMut(web_sys::Event)>,
-}
-
-impl Slider {
-    fn create_element(self) -> Result<HtmlElement, JsValue> {
-        let window = window().unwrap();
-        let document = window.document().unwrap();
-
-        let slider: HtmlInputElement = document.create_element("input")?.dyn_into()?;
-        slider.set_type("range");
-        slider.set_min(&format!("{}", self.min));
-        slider.set_max(&format!("{}", self.max));
-        slider.set_step(&format!("{}", self.step));
-        slider.set_value(&format!("{}", self.start));
-
-        let closure = self.closure;
-        slider.set_oninput(Some(closure.as_ref().unchecked_ref()));
-        closure.forget();
-
-        let label = document.create_element("div")?;
-        label.set_inner_html(self.label);
-
-        let container = document.create_element("div")?;
-        container.append_child(&label)?;
-        container.append_child(&slider)?;
-
-        let container: HtmlElement = container.dyn_into()?;
-        container.style().set_property("margin-bottom", "15px")?;
-
-        Ok(container)
-    }
 }
 
 struct Checkbox {

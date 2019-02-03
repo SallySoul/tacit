@@ -4,6 +4,7 @@ use web_sys::WebGlRenderingContext as GL;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
 
 // The key is that we maintain a rust vec for ease, but package a Float32Array "view" into said vec
+#[allow(dead_code)]
 pub struct ArrayBuffer {
     float_buffer: Vec<f32>,
     float_array: Float32Array,
@@ -43,6 +44,7 @@ impl ArrayBuffer {
     }
 }
 
+#[allow(dead_code)]
 pub struct IndexBuffer {
     u16_buffer: Vec<u16>,
     u16_array: Uint16Array,
