@@ -6,10 +6,14 @@ use web_sys::*;
 static SIMPLE_VS: &'static str = include_str!("./vertex_shader.vert");
 static SIMPLE_FS: &'static str = include_str!("./fragment_shader.frag");
 
+static FADE_BACKGROUND_VS: &'static str = include_str!("./fade_background.vert");
+static FADE_BACKGROUND_FS: &'static str = include_str!("./fade_background.frag");
+
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum ShaderKind {
     Simple,
+    FadeBackground,
 }
 
 /// Powers retrieving and using our shaders
@@ -23,12 +27,13 @@ impl ShaderSystem {
     pub fn new(gl: &WebGlRenderingContext) -> ShaderSystem {
         let mut programs = HashMap::new();
 
-        let simple_shader = Shader::new(&gl, SIMPLE_VS, SIMPLE_FS).unwrap();
-
+        let simple_shader = Shader::new(&gl, SIMPLE_VS, SIMPLE_FS).expect("Expected Simple Shader");
         let active_program = RefCell::new(ShaderKind::Simple);
         gl.use_program(Some(&simple_shader.program));
-
         programs.insert(ShaderKind::Simple, simple_shader);
+
+        let fade_background_shader = Shader::new(&gl, FADE_BACKGROUND_VS, FADE_BACKGROUND_FS).expect("Expected Fade Background Shader");
+        programs.insert(ShaderKind::FadeBackground, fade_background_shader);
 
         ShaderSystem {
             programs,
@@ -36,23 +41,22 @@ impl ShaderSystem {
         }
     }
 
+/*
     /// Get one of our Shader's
     pub fn get_shader(&self, shader_kind: &ShaderKind) -> Option<&Shader> {
         self.programs.get(shader_kind)
     }
-
-    /*
-        /// Use a shader program. We cache the last used shader program to avoid unnecessary
-        /// calls to the GPU.
-        pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) {
-            if *self.active_program.borrow() == shader_kind {
-                return;
-            }
-
+*/
+    
+    /// Use a shader program. We cache the last used shader program to avoid unnecessary
+    /// calls to the GPU.
+    pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) -> &Shader {
+        if *self.active_program.borrow() != shader_kind {
             gl.use_program(Some(&self.programs.get(&shader_kind).unwrap().program));
             *self.active_program.borrow_mut() = shader_kind;
         }
-    */
+        &self.programs.get(&shader_kind).unwrap()
+    }
 }
 
 /// One per ShaderKind

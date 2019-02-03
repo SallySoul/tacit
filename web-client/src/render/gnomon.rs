@@ -1,9 +1,10 @@
 use super::buffers::{ArrayBuffer, IndexBuffer};
 use super::color::*;
-use crate::shader::Shader;
+use crate::shader::{ShaderKind, ShaderSystem};
 use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
+use camera::Camera;
 
 const FRAME_PROPORTION: f32 = 1.0 / 3.0;
 const X_COLOR: Color = RED;
@@ -70,7 +71,21 @@ impl Gnomon {
         })
     }
 
-    pub fn render(&mut self, gl_context: &WebGlRenderingContext, shader: &Shader) {
+    pub fn render(&mut self, gl_context: &WebGlRenderingContext, shader_sys: &ShaderSystem, camera: &Camera) {
+        let shader = shader_sys.use_program(gl_context, ShaderKind::Simple);
+
+        let object_transform_uniform =
+            shader.get_uniform_location(gl_context, "object_transform");
+
+        let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
+        let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
+
+        gl_context.uniform_matrix4fv_with_f32_array(
+            object_transform_uniform.as_ref(),
+            false,
+            object_transform_mut_ref.as_mut(),
+        );
+
         let color_uniform = shader.get_uniform_location(&gl_context, "color");
         let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
@@ -82,7 +97,7 @@ impl Gnomon {
 
         // Point an attribute to the currently bound VBO
         gl_context.vertex_attrib_pointer_with_i32(
-            position_attribute as u32,
+            position_attribute,
             3,
             GL::FLOAT,
             false,
@@ -91,7 +106,7 @@ impl Gnomon {
         );
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::LINES, 8, GL::UNSIGNED_SHORT, 0);
 
@@ -123,7 +138,7 @@ impl Gnomon {
         gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
 
         // Enable the attribute
-        gl_context.enable_vertex_attrib_array(0);
+        gl_context.enable_vertex_attrib_array(position_attribute);
 
         gl_context.draw_elements_with_i32(GL::LINES, 8, GL::UNSIGNED_SHORT, 0);
     }

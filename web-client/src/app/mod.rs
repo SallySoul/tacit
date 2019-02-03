@@ -1,5 +1,6 @@
 use crate::render::WebRendererWrapper;
 use camera::{ButtonState, Camera, MouseButton};
+use cgmath::{InnerSpace};
 use implicit_mesh::cell_keys::morton_keys::MortonKey;
 use implicit_mesh::function_ir::Node;
 use implicit_mesh::interval::Interval;
@@ -161,8 +162,11 @@ impl App {
                 self.camera.transition_to_default();
             }
             Message::Debug => {
-                let v = self.camera.get_world_to_camera_transform();
-                log_1(&format!("VM: {:?}", v).into());
+                let up = self.camera.get_up();
+                let right = self.camera.get_right();
+
+                log_1(&format!("up: {:?}, norm: {}", up, up.magnitude()).into());
+                log_1(&format!("right: {:?}, norm: {}", right, right.magnitude()).into());
             }
             Message::SetFov(fov) => {
                 self.camera.set_field_of_view(*fov);

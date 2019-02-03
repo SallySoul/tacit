@@ -223,7 +223,7 @@ impl Camera {
 
     // TODO, transitions should be moved to another module I think.
     // could have state stack, with default at bottom,
-    // could also have snap to axis and thigs like that
+    // could also have snap to axis and things like that
     pub fn transition_to_default(&mut self) {
         let rotation = self.default_rotation.clone();
         let target = self.default_target.clone();
@@ -247,16 +247,22 @@ impl Camera {
     }
 
     /// Get the rotation of the camera
+    // TODO: I think we should cache this or the view matrix
+    // I think this is expensive?
     pub fn get_rotation(&self) -> Basis3<f32> {
         Basis3::from(self.rotation)
     }
 
-    pub fn get_camera_up(&self) -> Vector3<f32> {
-        Vector3::new(0.0, 0.0, 0.0)
+    pub fn get_up(&self) -> Vector3<f32> {
+        self.get_world_to_camera_transform()
+            .x
+            .truncate()
     }
 
-    pub fn get_camera_right(&self) -> Vector3<f32> {
-        Vector3::new(0.0, 0.0, 0.0)
+    pub fn get_right(&self) -> Vector3<f32> {
+        self.get_world_to_camera_transform()
+            .y
+            .truncate()
     }
 
     /// world to camera transform, also known as ViewMatrix

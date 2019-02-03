@@ -6,7 +6,7 @@ use web_sys::console::log_1;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::WebGlRenderingContext;
 
-use crate::shader::{Shader, ShaderKind, ShaderSystem};
+use crate::shader::ShaderSystem;
 use camera::Camera;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -14,138 +14,9 @@ use std::rc::Rc;
 mod buffers;
 mod color;
 mod gnomon;
-
-use buffers::{ArrayBuffer, IndexBuffer};
-
-use color::*;
-
-struct PlotBuffers {
-    point_count: i32,
-    point_vertices_buffer: ArrayBuffer,
-    point_indices_buffer: IndexBuffer,
-
-    edge_count: i32,
-    edge_vertices_buffer: ArrayBuffer,
-    edge_indices_buffer: IndexBuffer,
-
-    bb_edge_count: i32,
-    bb_vertices_buffer: ArrayBuffer,
-    bb_indices_buffer: IndexBuffer,
-}
-
-impl PlotBuffers {
-    fn new(
-        gl_context: &WebGlRenderingContext,
-        mtree: &MeshTree<MortonKey, Node>,
-    ) -> Result<PlotBuffers, JsValue> {
-        let point_float_vec = mtree.get_vertex_floats();
-        let point_count = point_float_vec.len() / 3;
-        let point_vertices_buffer = ArrayBuffer::new(gl_context, point_float_vec)?;
-        let point_indices_buffer = IndexBuffer::new(gl_context, (0..point_count as u16).collect())?;
-
-        let edge_float_vec = mtree.get_edge_floats();
-        let edge_vertex_count = edge_float_vec.len() / 3;
-        let edge_vertices_buffer = ArrayBuffer::new(gl_context, edge_float_vec)?;
-        let edge_indices_buffer =
-            IndexBuffer::new(gl_context, (0..edge_vertex_count as u16).collect())?;
-
-        let bb_float_vec = mtree.get_bounding_box_floats();
-        let bb_vertex_count = bb_float_vec.len() / 3;
-        let bb_vertices_buffer = ArrayBuffer::new(gl_context, bb_float_vec)?;
-        let bb_indices_buffer =
-            IndexBuffer::new(gl_context, (0..bb_vertex_count as u16).collect())?;
-
-        Ok(PlotBuffers {
-            point_count: point_count as i32,
-            point_vertices_buffer,
-            point_indices_buffer,
-            edge_count: (edge_vertex_count / 2) as i32,
-            edge_vertices_buffer,
-            edge_indices_buffer,
-            bb_edge_count: (bb_vertex_count / 2) as i32,
-            bb_vertices_buffer,
-            bb_indices_buffer,
-        })
-    }
-
-    fn render_edges(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
-        let color_uniform = shader.get_uniform_location(&gl_context, "color");
-
-        let mut edge_color = Color::from_floats(0.2, 0.33, 0.84, 1.0);
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
-
-        // Bind buffers
-        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.edge_vertices_buffer.gl_buffer));
-        gl_context.bind_buffer(
-            GL::ELEMENT_ARRAY_BUFFER,
-            Some(&self.edge_indices_buffer.gl_buffer),
-        );
-
-        // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
-
-        // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
-
-        // Enable the attribute
-        gl_context.enable_vertex_attrib_array(position_attribute);
-
-        gl_context.draw_elements_with_i32(GL::LINES, self.edge_count * 2, GL::UNSIGNED_SHORT, 0);
-    }
-
-    fn render_bb(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
-        let color_uniform = shader.get_uniform_location(&gl_context, "color");
-
-        let mut edge_color = Color::from_floats(0.68, 0.04, 0.23, 1.0);
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
-
-        // Bind buffers
-        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.bb_vertices_buffer.gl_buffer));
-        gl_context.bind_buffer(
-            GL::ELEMENT_ARRAY_BUFFER,
-            Some(&self.bb_indices_buffer.gl_buffer),
-        );
-
-        // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
-
-        // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
-
-        // Enable the attribute
-        gl_context.enable_vertex_attrib_array(position_attribute);
-
-        gl_context.draw_elements_with_i32(GL::LINES, self.bb_edge_count * 2, GL::UNSIGNED_SHORT, 0);
-    }
-
-    fn render_points(&self, gl_context: &WebGlRenderingContext, shader: &Shader) {
-        let color_uniform = shader.get_uniform_location(&gl_context, "color");
-
-        let mut edge_color = Color::from_floats(0.33, 0.86, 0.42, 1.0);
-        gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
-
-        // Bind buffers
-        gl_context.bind_buffer(
-            GL::ARRAY_BUFFER,
-            Some(&self.point_vertices_buffer.gl_buffer),
-        );
-        gl_context.bind_buffer(
-            GL::ELEMENT_ARRAY_BUFFER,
-            Some(&self.point_indices_buffer.gl_buffer),
-        );
-
-        // Get the attribute location
-        let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
-
-        // Point an attribute to the currently bound VBO
-        gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
-
-        // Enable the attribute
-        gl_context.enable_vertex_attrib_array(position_attribute);
-
-        gl_context.draw_elements_with_i32(GL::POINTS, self.point_count, GL::UNSIGNED_SHORT, 0);
-    }
-}
+mod fade_background;
+mod plot_buffers;
+use plot_buffers::PlotBuffers;
 
 pub type WebRendererWrapper = Rc<RefCell<WebRenderer>>;
 
@@ -158,12 +29,14 @@ pub struct WebRenderer {
     draw_bb: bool,
     draw_gnomon: bool,
     gnomon: gnomon::Gnomon,
+    fade_background: fade_background::FadeBackground,
 }
 
 impl WebRenderer {
     pub fn new_wrapper(gl_context: WebGlRenderingContext) -> Result<WebRendererWrapper, JsValue> {
         let shader_sys = ShaderSystem::new(&gl_context);
         let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
+        let fade_background = fade_background::FadeBackground::new(&gl_context)?;
 
         Ok(Rc::new(RefCell::new(WebRenderer {
             shader_sys,
@@ -174,6 +47,7 @@ impl WebRenderer {
             draw_bb: crate::DRAW_BB_START,
             draw_gnomon: crate::DRAW_GNOMON_START,
             gnomon,
+            fade_background
         })))
     }
 
@@ -215,35 +89,22 @@ impl WebRenderer {
 
         self.gl_context.viewport(0, 0, width, height);
 
-        //self.gl_context.line_width(4.0);
-        let shader = self.shader_sys.get_shader(&ShaderKind::Simple).unwrap();
+        self.fade_background.render(&self.gl_context, &self.shader_sys);
 
-        let object_transform_uniform =
-            shader.get_uniform_location(&self.gl_context, "object_transform");
-
-        let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
-        let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
-
-        self.gl_context.uniform_matrix4fv_with_f32_array(
-            object_transform_uniform.as_ref(),
-            false,
-            object_transform_mut_ref.as_mut(),
-        );
+        if self.draw_gnomon {
+            self.gnomon.render(&self.gl_context, &self.shader_sys, camera);
+        }
 
         match &self.plot_buffers {
             Some(plot_buffers) => {
-                if self.draw_edges {
-                    plot_buffers.render_edges(&self.gl_context, shader);
-                }
-                if self.draw_bb {
-                    plot_buffers.render_bb(&self.gl_context, shader);
-                }
-                if self.draw_vertices {
-                    plot_buffers.render_points(&self.gl_context, shader);
-                }
-                if self.draw_gnomon {
-                    self.gnomon.render(&self.gl_context, shader);
-                }
+                plot_buffers.render(
+                    &self.gl_context, 
+                    &self.shader_sys,
+                    camera,
+                    self.draw_edges,
+                    self.draw_bb,
+                    self.draw_vertices,
+                );
             }
             None => (),
         };

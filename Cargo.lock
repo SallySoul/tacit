@@ -512,6 +512,7 @@ name = "tacit-web-app"
 version = "0.1.0"
 dependencies = [
  "camera 0.1.0",
+ "cgmath 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "console_error_panic_hook 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "geoprim 0.1.0",
  "implicit-mesh 0.1.0",
