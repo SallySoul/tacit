@@ -13,8 +13,8 @@ use std::rc::Rc;
 
 mod buffers;
 mod color;
-mod gnomon;
 mod fade_background;
+mod gnomon;
 mod plot_buffers;
 use plot_buffers::PlotBuffers;
 
@@ -49,7 +49,7 @@ impl WebRenderer {
             draw_bb: crate::DRAW_BB_START,
             draw_gnomon: crate::DRAW_GNOMON_START,
             gnomon,
-            fade_background
+            fade_background,
         })))
     }
 
@@ -92,17 +92,19 @@ impl WebRenderer {
         self.gl_context.viewport(0, 0, width, height);
 
         self.gl_context.disable(GL::DEPTH_TEST);
-        self.fade_background.render(&self.gl_context, &self.shader_sys);
+        self.fade_background
+            .render(&self.gl_context, &self.shader_sys);
         self.gl_context.enable(GL::DEPTH_TEST);
 
         if self.draw_gnomon {
-            self.gnomon.render(&self.gl_context, &self.shader_sys, camera);
+            self.gnomon
+                .render(&self.gl_context, &self.shader_sys, camera);
         }
 
         match &self.plot_buffers {
             Some(plot_buffers) => {
                 plot_buffers.render(
-                    &self.gl_context, 
+                    &self.gl_context,
                     &self.shader_sys,
                     camera,
                     self.draw_edges,

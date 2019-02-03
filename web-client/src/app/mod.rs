@@ -1,6 +1,6 @@
 use crate::render::WebRendererWrapper;
 use camera::{ButtonState, Camera, MouseButton};
-use cgmath::{InnerSpace};
+use cgmath::InnerSpace;
 use implicit_mesh::cell_keys::morton_keys::MortonKey;
 use implicit_mesh::function_ir::Node;
 use implicit_mesh::interval::Interval;

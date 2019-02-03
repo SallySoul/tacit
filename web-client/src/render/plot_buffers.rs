@@ -1,13 +1,13 @@
-use implicit_mesh::cell_keys::morton_keys::MortonKey;
-use implicit_mesh::function_ir::Node;
-use implicit_mesh::mesh_tree::*;
 use super::buffers::{ArrayBuffer, IndexBuffer};
 use super::color::*;
 use crate::shader::{ShaderKind, ShaderSystem};
+use camera::Camera;
+use implicit_mesh::cell_keys::morton_keys::MortonKey;
+use implicit_mesh::function_ir::Node;
+use implicit_mesh::mesh_tree::*;
 use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
-use camera::Camera;
 
 pub struct PlotBuffers {
     point_count: i32,
@@ -59,7 +59,7 @@ impl PlotBuffers {
     }
 
     pub fn render(
-        &self, 
+        &self,
         gl_context: &WebGlRenderingContext,
         shader_sys: &ShaderSystem,
         camera: &Camera,
@@ -70,8 +70,7 @@ impl PlotBuffers {
         let shader = shader_sys.use_program(gl_context, ShaderKind::Simple);
 
         // Load in the object transfrom
-        let object_transform_uniform =
-            shader.get_uniform_location(gl_context, "object_transform");
+        let object_transform_uniform = shader.get_uniform_location(gl_context, "object_transform");
 
         let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
@@ -86,7 +85,6 @@ impl PlotBuffers {
         let position_attribute = gl_context.get_attrib_location(&shader.program, "position") as u32;
 
         if draw_edges {
-
             let mut edge_color = Color::from_floats(0.2, 0.33, 0.84, 1.0);
             gl_context.uniform4fv_with_f32_array(color_uniform.as_ref(), &mut edge_color);
 
@@ -95,9 +93,21 @@ impl PlotBuffers {
                 GL::ELEMENT_ARRAY_BUFFER,
                 Some(&self.edge_indices_buffer.gl_buffer),
             );
-            gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
+            gl_context.vertex_attrib_pointer_with_i32(
+                position_attribute,
+                3,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
             gl_context.enable_vertex_attrib_array(position_attribute);
-            gl_context.draw_elements_with_i32(GL::LINES, self.edge_count * 2, GL::UNSIGNED_SHORT, 0);
+            gl_context.draw_elements_with_i32(
+                GL::LINES,
+                self.edge_count * 2,
+                GL::UNSIGNED_SHORT,
+                0,
+            );
         }
 
         if draw_bb {
@@ -109,9 +119,21 @@ impl PlotBuffers {
                 GL::ELEMENT_ARRAY_BUFFER,
                 Some(&self.bb_indices_buffer.gl_buffer),
             );
-            gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
+            gl_context.vertex_attrib_pointer_with_i32(
+                position_attribute,
+                3,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
             gl_context.enable_vertex_attrib_array(position_attribute);
-            gl_context.draw_elements_with_i32(GL::LINES, self.bb_edge_count * 2, GL::UNSIGNED_SHORT, 0);
+            gl_context.draw_elements_with_i32(
+                GL::LINES,
+                self.bb_edge_count * 2,
+                GL::UNSIGNED_SHORT,
+                0,
+            );
         }
 
         if draw_points {
@@ -126,7 +148,14 @@ impl PlotBuffers {
                 GL::ELEMENT_ARRAY_BUFFER,
                 Some(&self.point_indices_buffer.gl_buffer),
             );
-            gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
+            gl_context.vertex_attrib_pointer_with_i32(
+                position_attribute,
+                3,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
             gl_context.enable_vertex_attrib_array(position_attribute);
             gl_context.draw_elements_with_i32(GL::POINTS, self.point_count, GL::UNSIGNED_SHORT, 0);
         }

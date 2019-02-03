@@ -1,9 +1,8 @@
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
-use web_sys::*;
 use web_sys::console::log_1;
+use web_sys::*;
 
 static SIMPLE_VS: &'static str = include_str!("./vertex_shader.vert");
 static SIMPLE_FS: &'static str = include_str!("./fragment_shader.frag");
@@ -45,28 +44,17 @@ pub struct ShaderSystem2 {
 impl ShaderSystem2 {
     pub fn new(gl_context: &WebGlRenderingContext) -> ShaderSystem2 {
         let fade_background_shader = {
-            let program = create_program(
-                &gl_context, 
-                FADE_BACKGROUND_VS,
-                FADE_BACKGROUND_FS,
-            ).expect("Create Fade Background program");
+            let program = create_program(&gl_context, FADE_BACKGROUND_VS, FADE_BACKGROUND_FS)
+                .expect("Create Fade Background program");
 
-            let position_attribute_signed = gl_context
-                .get_attrib_location(
-                    &program,
-                    "position"
-                );
+            let position_attribute_signed = gl_context.get_attrib_location(&program, "position");
 
             if position_attribute_signed < 0 {
                 log_1(&format!("Could not get FadeBackground position attribute").into());
                 panic!("Could not get FadeBackground position attribute");
             }
 
-            let color_attribute_signed = gl_context
-                .get_attrib_location(
-                    &program,
-                    "a_color"
-                );
+            let color_attribute_signed = gl_context.get_attrib_location(&program, "a_color");
 
             if color_attribute_signed < 0 {
                 log_1(&format!("Could not get FadeBackground color attribute").into());
@@ -97,7 +85,8 @@ impl ShaderSystem {
         gl.use_program(Some(&simple_shader.program));
         programs.insert(ShaderKind::Simple, simple_shader);
 
-        let fade_background_shader = Shader::new(&gl, FADE_BACKGROUND_VS, FADE_BACKGROUND_FS).expect("Expected Fade Background Shader");
+        let fade_background_shader = Shader::new(&gl, FADE_BACKGROUND_VS, FADE_BACKGROUND_FS)
+            .expect("Expected Fade Background Shader");
         programs.insert(ShaderKind::FadeBackground, fade_background_shader);
 
         ShaderSystem {
@@ -106,13 +95,13 @@ impl ShaderSystem {
         }
     }
 
-/*
-    /// Get one of our Shader's
-    pub fn get_shader(&self, shader_kind: &ShaderKind) -> Option<&Shader> {
-        self.programs.get(shader_kind)
-    }
-*/
-    
+    /*
+        /// Get one of our Shader's
+        pub fn get_shader(&self, shader_kind: &ShaderKind) -> Option<&Shader> {
+            self.programs.get(shader_kind)
+        }
+    */
+
     /// Use a shader program. We cache the last used shader program to avoid unnecessary
     /// calls to the GPU.
     pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) -> &Shader {
@@ -169,13 +158,13 @@ impl Shader {
 }
 
 fn create_program(
-    gl_context: &WebGlRenderingContext, 
+    gl_context: &WebGlRenderingContext,
     vert_shader_src: &str,
     frag_shader_src: &str,
 ) -> Result<WebGlProgram, String> {
     let vert_shader = compile_shader(
-        &gl_context, 
-        WebGlRenderingContext::VERTEX_SHADER, 
+        &gl_context,
+        WebGlRenderingContext::VERTEX_SHADER,
         vert_shader_src,
     )?;
     let frag_shader = compile_shader(
