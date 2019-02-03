@@ -23,10 +23,10 @@ impl FadeBackground {
 
         // Each vertex gets a color, which has four components
         let mut color_vec = Vec::with_capacity(16);
-        color_vec.extend_from_slice(&RED);
-        color_vec.extend_from_slice(&RED);
-        color_vec.extend_from_slice(&BLUE);
-        color_vec.extend_from_slice(&BLUE);
+        color_vec.extend_from_slice(&WHITE);
+        color_vec.extend_from_slice(&WHITE);
+        color_vec.extend_from_slice(&GREY);
+        color_vec.extend_from_slice(&GREY);
         
         #[cfg_attr(rustfmt, rustfmt_skip)]
         let indices_vec = vec![
@@ -60,7 +60,14 @@ impl FadeBackground {
         gl_context.enable_vertex_attrib_array(position_attribute);
 
         // Setup the color attribute
-        let color_attribute = gl_context.get_attrib_location(&shader.program, "v_color") as u32;
+        let color_attribute_signed = gl_context.get_attrib_location(&shader.program, "a_color");
+
+        if color_attribute_signed < 0 {
+            panic!("Can't get a_color attribute");
+        }
+
+        let color_attribute = color_attribute_signed as u32;
+
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.colors.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
         gl_context.vertex_attrib_pointer_with_i32(

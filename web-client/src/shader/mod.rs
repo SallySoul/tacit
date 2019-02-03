@@ -1,7 +1,9 @@
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
+use web_sys::console::log_1;
 
 static SIMPLE_VS: &'static str = include_str!("./vertex_shader.vert");
 static SIMPLE_FS: &'static str = include_str!("./fragment_shader.frag");
@@ -20,6 +22,69 @@ pub enum ShaderKind {
 pub struct ShaderSystem {
     programs: HashMap<ShaderKind, Shader>,
     pub active_program: RefCell<ShaderKind>,
+}
+
+pub struct FadeBackgroundShader {
+    program: WebGlProgram,
+    position_attribute: u32,
+    color_attribute: u32,
+}
+
+pub struct SimpleShader {
+    program: WebGlProgram,
+    position_attribute: u32,
+    object_transform_uniform: WebGlUniformLocation,
+}
+
+pub struct ShaderSystem2 {
+    fade_background_shader: FadeBackgroundShader,
+    //simple_shader: SimpleShader,
+    active_program: ShaderKind,
+}
+
+impl ShaderSystem2 {
+    pub fn new(gl_context: &WebGlRenderingContext) -> ShaderSystem2 {
+        let fade_background_shader = {
+            let program = create_program(
+                &gl_context, 
+                FADE_BACKGROUND_VS,
+                FADE_BACKGROUND_FS,
+            ).expect("Create Fade Background program");
+
+            let position_attribute_signed = gl_context
+                .get_attrib_location(
+                    &program,
+                    "position"
+                );
+
+            if position_attribute_signed < 0 {
+                log_1(&format!("Could not get FadeBackground position attribute").into());
+                panic!("Could not get FadeBackground position attribute");
+            }
+
+            let color_attribute_signed = gl_context
+                .get_attrib_location(
+                    &program,
+                    "a_color"
+                );
+
+            if color_attribute_signed < 0 {
+                log_1(&format!("Could not get FadeBackground color attribute").into());
+                panic!("Could not get FadeBackground color attribute");
+            }
+
+            FadeBackgroundShader {
+                program,
+                position_attribute: position_attribute_signed as u32,
+                color_attribute: color_attribute_signed as u32,
+            }
+        };
+
+        ShaderSystem2 {
+            fade_background_shader,
+            active_program: ShaderKind::FadeBackground,
+        }
+    }
 }
 
 impl ShaderSystem {
@@ -101,6 +166,24 @@ impl Shader {
 
         Some(uniforms.get(uniform_name).expect("loc").clone())
     }
+}
+
+fn create_program(
+    gl_context: &WebGlRenderingContext, 
+    vert_shader_src: &str,
+    frag_shader_src: &str,
+) -> Result<WebGlProgram, String> {
+    let vert_shader = compile_shader(
+        &gl_context, 
+        WebGlRenderingContext::VERTEX_SHADER, 
+        vert_shader_src,
+    )?;
+    let frag_shader = compile_shader(
+        &gl_context,
+        WebGlRenderingContext::FRAGMENT_SHADER,
+        frag_shader_src,
+    )?;
+    link_program(&gl_context, &vert_shader, &frag_shader)
 }
 
 /// Create a shader program using the WebGL APIs

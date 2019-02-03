@@ -38,6 +38,8 @@ impl WebRenderer {
         let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
         let fade_background = fade_background::FadeBackground::new(&gl_context)?;
 
+        let _2 = crate::shader::ShaderSystem2::new(&gl_context);
+
         Ok(Rc::new(RefCell::new(WebRenderer {
             shader_sys,
             plot_buffers: None,
@@ -89,7 +91,9 @@ impl WebRenderer {
 
         self.gl_context.viewport(0, 0, width, height);
 
+        self.gl_context.disable(GL::DEPTH_TEST);
         self.fade_background.render(&self.gl_context, &self.shader_sys);
+        self.gl_context.enable(GL::DEPTH_TEST);
 
         if self.draw_gnomon {
             self.gnomon.render(&self.gl_context, &self.shader_sys, camera);
