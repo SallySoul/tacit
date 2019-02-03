@@ -27,58 +27,31 @@ impl Gnomon {
     pub fn new(gl_context: &WebGlRenderingContext, width: f32) -> Result<Gnomon, JsValue> {
         let frame_width = FRAME_PROPORTION * width;
 
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let x_vertices_vec = vec![
-            0.0,
-            0.0,
-            0.0,
-            frame_width,
-            0.0,
-            0.0,
-            width,
-            0.0,
-            0.0,
-            frame_width,
-            frame_width,
-            0.0,
-            frame_width,
-            0.0,
-            frame_width,
+            0.0, 0.0, 0.0,
+            frame_width, 0.0, 0.0,
+            width, 0.0, 0.0,
+            frame_width, frame_width, 0.0,
+            frame_width, 0.0, frame_width,
         ];
 
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let y_vertices_vec = vec![
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            frame_width,
-            0.0,
-            0.0,
-            width,
-            0.0,
-            frame_width,
-            frame_width,
-            0.0,
-            0.0,
-            frame_width,
-            frame_width,
+            0.0, 0.0, 0.0,
+            0.0, frame_width, 0.0,
+            0.0, width, 0.0,
+            frame_width, frame_width, 0.0,
+            0.0, frame_width, frame_width,
         ];
 
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let z_vertices_vec = vec![
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            frame_width,
-            0.0,
-            0.0,
-            width,
-            frame_width,
-            0.0,
-            frame_width,
-            0.0,
-            frame_width,
-            frame_width,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, frame_width,
+            0.0, 0.0, width,
+            frame_width, 0.0, frame_width,
+            0.0, frame_width, frame_width,
         ];
 
         let indices_vec = vec![0, 1, 1, 2, 1, 3, 1, 4];
