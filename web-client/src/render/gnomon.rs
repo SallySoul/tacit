@@ -91,7 +91,7 @@ impl Gnomon {
         );
 
         let color_uniform = &shader_sys.simple_shader.color_uniform;
-        let position_attribute = shader_sys.simple_shader.position_attribute; 
+        let position_attribute = shader_sys.simple_shader.position_attribute;
 
         // Draw_x
         gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut self.x_color);

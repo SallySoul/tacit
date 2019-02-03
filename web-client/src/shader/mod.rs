@@ -72,15 +72,13 @@ impl ShaderSystem {
                 panic!("Could not get FadeBackground position attribute");
             }
 
-            let object_transform_uniform = gl_context.get_uniform_location(
-                &program, 
-                "object_transform"
-            ).expect("Could not get uniform");
+            let object_transform_uniform = gl_context
+                .get_uniform_location(&program, "object_transform")
+                .expect("Could not get uniform");
 
-            let color_uniform = gl_context.get_uniform_location(
-                &program, 
-                "color"
-            ).expect("Could not get uniform");
+            let color_uniform = gl_context
+                .get_uniform_location(&program, "color")
+                .expect("Could not get uniform");
 
             SimpleShader {
                 program,
@@ -100,7 +98,7 @@ impl ShaderSystem {
     pub fn use_program(&self, gl_context: &WebGlRenderingContext, shader_kind: ShaderKind) {
         if *self.active_program.borrow() != shader_kind {
             match shader_kind {
-                ShaderKind::Simple =>  {
+                ShaderKind::Simple => {
                     gl_context.use_program(Some(&self.simple_shader.program));
                 }
                 ShaderKind::FadeBackground => {

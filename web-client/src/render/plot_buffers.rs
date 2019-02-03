@@ -70,7 +70,7 @@ impl PlotBuffers {
         shader_sys.use_program(gl_context, ShaderKind::Simple);
 
         // Load in the object transfrom
-        let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform; 
+        let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform;
 
         let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
@@ -82,7 +82,7 @@ impl PlotBuffers {
         );
 
         let color_uniform = &shader_sys.simple_shader.color_uniform;
-        let position_attribute = shader_sys.simple_shader.position_attribute; 
+        let position_attribute = shader_sys.simple_shader.position_attribute;
 
         if draw_edges {
             let mut edge_color = Color::from_floats(0.2, 0.33, 0.84, 1.0);

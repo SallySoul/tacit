@@ -254,15 +254,11 @@ impl Camera {
     }
 
     pub fn get_up(&self) -> Vector3<f32> {
-        self.get_world_to_camera_transform()
-            .x
-            .truncate()
+        self.get_world_to_camera_transform().x.truncate()
     }
 
     pub fn get_right(&self) -> Vector3<f32> {
-        self.get_world_to_camera_transform()
-            .y
-            .truncate()
+        self.get_world_to_camera_transform().y.truncate()
     }
 
     /// world to camera transform, also known as ViewMatrix

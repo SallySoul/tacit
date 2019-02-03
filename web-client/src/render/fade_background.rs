@@ -45,7 +45,7 @@ impl FadeBackground {
         shader_system.use_program(gl_context, ShaderKind::FadeBackground);
 
         // Setup the postion attribute
-        let position_attribute = shader_system.fade_background_shader.position_attribute; 
+        let position_attribute = shader_system.fade_background_shader.position_attribute;
         gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.vertices.gl_buffer));
         gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices.gl_buffer));
         gl_context.vertex_attrib_pointer_with_i32(position_attribute, 3, GL::FLOAT, false, 0, 0);
