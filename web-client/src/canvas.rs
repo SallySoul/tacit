@@ -8,8 +8,8 @@ use web_sys::*;
 
 use crate::APP_DIV_ID;
 
-pub static CANVAS_WIDTH: i32 = 512;
-pub static CANVAS_HEIGHT: i32 = 512;
+pub static CANVAS_WIDTH: i32 = 820;
+pub static CANVAS_HEIGHT: i32 = 820;
 
 pub fn create_webgl_context(app: AppWrapper) -> Result<WebGlRenderingContext, JsValue> {
     let canvas = init_canvas(app)?;

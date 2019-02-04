@@ -223,7 +223,7 @@ impl Camera {
 
     // TODO, transitions should be moved to another module I think.
     // could have state stack, with default at bottom,
-    // could also have snap to axis and thigs like that
+    // could also have snap to axis and things like that
     pub fn transition_to_default(&mut self) {
         let rotation = self.default_rotation.clone();
         let target = self.default_target.clone();
@@ -247,18 +247,40 @@ impl Camera {
     }
 
     /// Get the rotation of the camera
+    // TODO: I think we should cache this or the view matrix
+    // I think this is expensive?
     pub fn get_rotation(&self) -> Basis3<f32> {
         Basis3::from(self.rotation)
+    }
+
+    pub fn get_up(&self) -> Vector3<f32> {
+        self.get_world_to_camera_transform().x.truncate()
+    }
+
+    pub fn get_right(&self) -> Vector3<f32> {
+        self.get_world_to_camera_transform().y.truncate()
+    }
+
+    /// The Rotation applied to world coordinates as part of the view matrix
+    pub fn get_rotation_transform(&self) -> Matrix4<f32> {
+        Matrix4::from(Matrix3::from(self.get_rotation().invert()))
+    }
+
+    /// world to camera transform, also known as ViewMatrix
+    pub fn get_world_to_camera_transform(&self) -> Matrix4<f32> {
+        // We need to transform the world so that the origin is the cam's pos
+        let inverse_pos = -self.get_position();
+        let pos_transform = Matrix4::from_translation(inverse_pos);
+
+        let rotation_transform = self.get_rotation_transform();
+
+        rotation_transform * pos_transform
     }
 
     /// Get the world coordinates to clipspace coordinates transform
     /// If you are unsure, this is probably the transform you want from the camera.
     pub fn get_world_to_clipspace_transform(&self) -> Matrix4<f32> {
-        // We need to move to transform the world so that the origin is the cam's pos
-        let inverse_pos = -self.get_position();
-        let pos_transform = Matrix4::from_translation(inverse_pos);
-
-        let rotation_transform = Matrix3::from(self.get_rotation().invert());
+        let world_to_camera_transform = self.get_world_to_camera_transform();
 
         let perspective_transform = perspective::fov_perspective_transform(
             self.field_of_view,
@@ -268,7 +290,7 @@ impl Camera {
         );
 
         // We need to an inverted order of operations becuase the matrix is inverted(?)
-        perspective_transform * Matrix4::from(rotation_transform) * pos_transform
+        perspective_transform * world_to_camera_transform
     }
 
     // When dealing with mouse input we need to translate the pixel location into

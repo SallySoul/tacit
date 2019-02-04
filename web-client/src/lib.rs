@@ -3,7 +3,6 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use web_sys::console::log_1;
-use web_sys::WebGlRenderingContext;
 
 mod app;
 mod canvas;
@@ -18,6 +17,8 @@ pub static EQUATION_START: &'static str = "x^2 + y^2 + z^2 - 100";
 pub static DRAW_BB_START: bool = true;
 pub static DRAW_VERTICES_START: bool = true;
 pub static DRAW_EDGES_START: bool = true;
+pub static DRAW_GNOMON_START: bool = false;
+pub static FOV_START_VALUE: f32 = std::f32::consts::PI / 2.0;
 
 #[wasm_bindgen]
 pub struct WebClient {
@@ -35,7 +36,7 @@ impl WebClient {
 
         let gl_context = canvas::create_webgl_context(Rc::clone(&app)).unwrap();
 
-        let renderer = render::WebRenderer::new_wrapper(gl_context);
+        let renderer = render::WebRenderer::new_wrapper(gl_context).expect("Renderer");
 
         app.borrow_mut().set_renderer(Rc::clone(&renderer));
 
@@ -61,6 +62,6 @@ impl WebClient {
     }
 
     pub fn render(&self) {
-        self.renderer.borrow().render(&self.app.borrow().camera);
+        self.renderer.borrow_mut().render(&self.app.borrow().camera);
     }
 }

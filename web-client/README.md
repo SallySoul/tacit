@@ -19,3 +19,11 @@ This crate contains the source for a web app frontend for the tacit plotter.
 * This blog post, and accompanying repository, are a great referecnce for line drawing techniques.
 
   [Drawing Lines is Hard](https://mattdesl.svbtle.com/drawing-lines-is-hard)
+
+* Some notes on bind ordering.
+
+  [Should unbind buffers?](https://gamedev.stackexchange.com/questions/90471/should-unbind-buffers)
+
+* This tutorial on bill boards, and how to orient them compliments the line drawing article.
+
+  [opengl-tutorial: Billboards](http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/)

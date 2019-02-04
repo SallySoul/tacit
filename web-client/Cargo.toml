@@ -9,8 +9,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "=0.1.5"
+cgmath = "0.16.1"
 js-sys = "=0.3.10"
 wasm-bindgen = "=0.2.33"
+smallvec = "0.6.8"
 camera = { path = "../camera" }
 implicit-mesh = { path = "../implicit-mesh" }
 geoprim = { path = "../geoprim" }
