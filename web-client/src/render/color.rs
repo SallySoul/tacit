@@ -4,10 +4,10 @@ pub const RED: Color = Color {
     rgba: [1.0, 0.0, 0.0, 1.0],
 };
 pub const BLUE: Color = Color {
-    rgba: [0.0, 1.0, 0.0, 1.0],
+    rgba: [0.0, 0.0, 1.0, 1.0],
 };
 pub const GREEN: Color = Color {
-    rgba: [0.0, 0.0, 1.0, 1.0],
+    rgba: [0.0, 1.0, 0.0, 1.0],
 };
 pub const WHITE: Color = Color {
     rgba: [1.0, 1.0, 1.0, 1.0],

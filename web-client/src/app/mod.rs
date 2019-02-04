@@ -164,9 +164,11 @@ impl App {
             Message::Debug => {
                 let up = self.camera.get_up();
                 let right = self.camera.get_right();
+                let pos = self.camera.get_position();
 
                 log_1(&format!("up: {:?}, norm: {}", up, up.magnitude()).into());
                 log_1(&format!("right: {:?}, norm: {}", right, right.magnitude()).into());
+                log_1(&format!("Camera Pos: {:?}", pos).into());
             }
             Message::SetFov(fov) => {
                 self.camera.set_field_of_view(*fov);

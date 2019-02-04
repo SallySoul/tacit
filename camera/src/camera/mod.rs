@@ -261,15 +261,20 @@ impl Camera {
         self.get_world_to_camera_transform().y.truncate()
     }
 
+    /// The Rotation applied to world coordinates as part of the view matrix
+    pub fn get_rotation_transform(&self) -> Matrix4<f32> {
+        Matrix4::from(Matrix3::from(self.get_rotation().invert()))
+    }
+
     /// world to camera transform, also known as ViewMatrix
     pub fn get_world_to_camera_transform(&self) -> Matrix4<f32> {
         // We need to transform the world so that the origin is the cam's pos
         let inverse_pos = -self.get_position();
         let pos_transform = Matrix4::from_translation(inverse_pos);
 
-        let rotation_transform = Matrix3::from(self.get_rotation().invert());
+        let rotation_transform = self.get_rotation_transform();
 
-        Matrix4::from(rotation_transform) * pos_transform
+        rotation_transform * pos_transform
     }
 
     /// Get the world coordinates to clipspace coordinates transform

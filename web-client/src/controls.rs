@@ -229,7 +229,7 @@ fn create_debug_button(app: AppWrapper) -> Result<HtmlElement, JsValue> {
 
     let button: HtmlInputElement = document.create_element("input")?.dyn_into()?;
     button.set_type("button");
-    button.set_value("Debug");
+    button.set_value("Debug Message");
     button.set_onclick(Some(closure.as_ref().unchecked_ref()));
     closure.forget();
 
