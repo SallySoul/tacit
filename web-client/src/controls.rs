@@ -69,7 +69,13 @@ pub fn append_controls(app: AppWrapper) -> Result<(), JsValue> {
 
     {
         let app = Rc::clone(&app);
-        let element = create_draw_gnomon_checkbox(app)?;
+        let element = create_draw_gnomon_center_checkbox(app)?;
+        controls.append_child(&element)?;
+    }
+
+    {
+        let app = Rc::clone(&app);
+        let element = create_draw_gnomon_corner_checkbox(app)?;
         controls.append_child(&element)?;
     }
 
@@ -256,19 +262,39 @@ fn create_draw_bb_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     Ok(draw_control)
 }
 
-fn create_draw_gnomon_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+fn create_draw_gnomon_center_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
     let handler = move |event: web_sys::Event| {
         let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
         let draw_flag = input_elem.checked();
 
         app.borrow_mut()
-            .handle_message(&Message::DrawGnomon(draw_flag));
+            .handle_message(&Message::DrawGnomonCenter(draw_flag));
     };
     let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
 
     let draw_control = Checkbox {
-        start_checked: crate::DRAW_GNOMON_START,
-        label: "Draw Gnomon",
+        start_checked: crate::DRAW_GNOMON_CENTER_START,
+        label: "Draw Gnomon Center",
+        closure,
+    }
+    .create_element()?;
+
+    Ok(draw_control)
+}
+
+fn create_draw_gnomon_corner_checkbox(app: AppWrapper) -> Result<HtmlElement, JsValue> {
+    let handler = move |event: web_sys::Event| {
+        let input_elem: HtmlInputElement = event.target().unwrap().dyn_into().unwrap();
+        let draw_flag = input_elem.checked();
+
+        app.borrow_mut()
+            .handle_message(&Message::DrawGnomonCorner(draw_flag));
+    };
+    let closure = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
+
+    let draw_control = Checkbox {
+        start_checked: crate::DRAW_GNOMON_CORNER_START,
+        label: "Draw Gnomon Corner",
         closure,
     }
     .create_element()?;

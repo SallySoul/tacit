@@ -17,7 +17,8 @@ pub static EQUATION_START: &'static str = "x^2 + y^2 + z^2 - 100";
 pub static DRAW_BB_START: bool = true;
 pub static DRAW_VERTICES_START: bool = true;
 pub static DRAW_EDGES_START: bool = true;
-pub static DRAW_GNOMON_START: bool = false;
+pub static DRAW_GNOMON_CENTER_START: bool = false;
+pub static DRAW_GNOMON_CORNER_START: bool = true;
 pub static FOV_START_VALUE: f32 = std::f32::consts::PI / 2.0;
 
 #[wasm_bindgen]

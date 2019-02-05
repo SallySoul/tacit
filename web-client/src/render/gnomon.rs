@@ -2,11 +2,15 @@ use super::buffers::{ArrayBuffer, IndexBuffer};
 use super::color::*;
 use crate::shader::{ShaderKind, ShaderSystem};
 use camera::Camera;
+use cgmath::{Matrix4, Vector3};
 use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
 const FRAME_PROPORTION: f32 = 1.0 / 3.0;
+const CORNER_HEIGHT: i32 = 100;
+const CORNER_WIDTH: i32 = 100;
+const CORNER_ASPECT_RATIO: f32 = CORNER_HEIGHT as f32 / CORNER_WIDTH as f32;
 const X_COLOR: Color = RED;
 const Y_COLOR: Color = GREEN;
 const Z_COLOR: Color = BLUE;
@@ -76,18 +80,35 @@ impl Gnomon {
         gl_context: &WebGlRenderingContext,
         shader_sys: &ShaderSystem,
         camera: &Camera,
+        corner_view: bool,
     ) {
         shader_sys.use_program(gl_context, ShaderKind::Simple);
-        // TODO: I think it would be awesome to add in a gnomon viewport type thing
-        // That requires re build a custom transform to clipspace
-        /*
-                let position_transform = Matrix4::from_translation(
-                    Vector3::new()
-                 * camera.get_rotation_tranform()
-        */
-        // Setup object transform matrix
+
+        let width = gl_context.drawing_buffer_width();
+        let height = gl_context.drawing_buffer_height();
         let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform;
-        let mut object_transform_matrix = camera.get_world_to_clipspace_transform();
+        let mut object_transform_matrix;
+
+        // Corner view has a different viewport
+        if corner_view {
+            let position_transform = Matrix4::from_translation(Vector3::new(0.0, 0.0, -2.0));
+            let rotation_transform = camera.get_rotation_transform();
+
+            let perspective_transform =
+                camera::fov_perspective_transform(1.5, CORNER_ASPECT_RATIO, 0.01, 1000.0);
+
+            object_transform_matrix =
+                perspective_transform * position_transform * rotation_transform;
+
+            gl_context.viewport(0, 0, CORNER_WIDTH, CORNER_HEIGHT);
+        }
+        // If not in corner then center
+        // center view, for now, uses standard object transform
+        else {
+            object_transform_matrix = camera.get_world_to_clipspace_transform();
+            gl_context.viewport(0, 0, width, height);
+        }
+
         let object_transform_mut_ref: &mut [f32; 16] = object_transform_matrix.as_mut();
         gl_context.uniform_matrix4fv_with_f32_array(
             Some(object_transform_uniform),

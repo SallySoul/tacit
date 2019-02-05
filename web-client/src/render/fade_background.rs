@@ -42,6 +42,10 @@ impl FadeBackground {
     }
 
     pub fn render(&self, gl_context: &WebGlRenderingContext, shader_system: &ShaderSystem) {
+        let width = gl_context.drawing_buffer_width();
+        let height = gl_context.drawing_buffer_height();
+        gl_context.viewport(0, 0, width, height);
+
         shader_system.use_program(gl_context, ShaderKind::FadeBackground);
 
         // Setup the postion attribute
