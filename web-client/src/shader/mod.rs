@@ -2,11 +2,13 @@ use std::cell::RefCell;
 use web_sys::console::log_1;
 use web_sys::*;
 
-static SIMPLE_VS: &'static str = include_str!("./vertex_shader.vert");
-static SIMPLE_FS: &'static str = include_str!("./fragment_shader.frag");
+static SIMPLE_VS: &'static str = include_str!("./simple.vert");
+static SIMPLE_FS: &'static str = include_str!("./simple.frag");
 
 static FADE_BACKGROUND_VS: &'static str = include_str!("./fade_background.vert");
 static FADE_BACKGROUND_FS: &'static str = include_str!("./fade_background.frag");
+
+static BILLBOARD_VS: &'static str = include_str!("./billboard.vert");
 
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -15,12 +17,16 @@ pub enum ShaderKind {
     FadeBackground,
 }
 
+/// This shader doesn't change the vertex locations, but does have color as an attribute
+/// thus useful for background fades.
 pub struct FadeBackgroundShader {
     program: WebGlProgram,
     pub position_attribute: u32,
     pub color_attribute: u32,
 }
 
+/// This shader applies a world coordinate to clipspace transform on the vertices
+/// and applies a uniform color. Useful for lines and points and little else.
 pub struct SimpleShader {
     program: WebGlProgram,
     pub position_attribute: u32,
@@ -28,9 +34,22 @@ pub struct SimpleShader {
     pub color_uniform: WebGlUniformLocation,
 }
 
+/// This shader is used for "billboard" geometry, that is 2D shapes that always need
+/// to face the camera. Color is an attribute
+pub struct BillBoardShader {
+    program: WebGlProgram,
+    pub board_position_attribute: u32,
+    pub board_center_attribute: u32,
+    pub color_attribute: u32,
+    pub camera_up: WebGlUniformLocation,
+    pub camera_right: WebGlUniformLocation,
+    pub worldspace_transform: WebGlUniformLocation,
+}
+
 pub struct ShaderSystem {
     pub fade_background_shader: FadeBackgroundShader,
     pub simple_shader: SimpleShader,
+    pub billboard_shader: BillBoardShader,
     active_program: RefCell<ShaderKind>,
 }
 
@@ -40,24 +59,13 @@ impl ShaderSystem {
             let program = create_program(&gl_context, FADE_BACKGROUND_VS, FADE_BACKGROUND_FS)
                 .expect("Create Fade Background program");
 
-            let position_attribute_signed = gl_context.get_attrib_location(&program, "position");
-
-            if position_attribute_signed < 0 {
-                log_1(&format!("Could not get FadeBackground position attribute").into());
-                panic!("Could not get FadeBackground position attribute");
-            }
-
-            let color_attribute_signed = gl_context.get_attrib_location(&program, "a_color");
-
-            if color_attribute_signed < 0 {
-                log_1(&format!("Could not get FadeBackground color attribute").into());
-                panic!("Could not get FadeBackground color attribute");
-            }
+            let position_attribute = get_attribute_pointer(gl_context, &program, "position");
+            let color_attribute = get_attribute_pointer(gl_context, &program, "a_color");
 
             FadeBackgroundShader {
                 program,
-                position_attribute: position_attribute_signed as u32,
-                color_attribute: color_attribute_signed as u32,
+                position_attribute: position_attribute,
+                color_attribute: color_attribute,
             }
         };
 
@@ -65,32 +73,48 @@ impl ShaderSystem {
             let program = create_program(&gl_context, SIMPLE_VS, SIMPLE_FS)
                 .expect("Create Fade Background program");
 
-            let position_attribute_signed = gl_context.get_attrib_location(&program, "position");
-
-            if position_attribute_signed < 0 {
-                log_1(&format!("Could not get FadeBackground position attribute").into());
-                panic!("Could not get FadeBackground position attribute");
-            }
-
-            let object_transform_uniform = gl_context
-                .get_uniform_location(&program, "object_transform")
-                .expect("Could not get uniform");
-
-            let color_uniform = gl_context
-                .get_uniform_location(&program, "color")
-                .expect("Could not get uniform");
+            let position_attribute = get_attribute_pointer(gl_context, &program, "position");
+            let object_transform_uniform =
+                get_uniform_location(gl_context, &program, "object_transform");
+            let color_uniform = get_uniform_location(gl_context, &program, "color");
 
             SimpleShader {
                 program,
-                position_attribute: position_attribute_signed as u32,
+                position_attribute: position_attribute,
                 object_transform_uniform,
                 color_uniform,
+            }
+        };
+
+        let billboard_shader = {
+            let program = create_program(&gl_context, BILLBOARD_VS, FADE_BACKGROUND_FS)
+                .expect("Create BillBoard Shader");
+
+            let board_position_attribute =
+                get_attribute_pointer(gl_context, &program, "board_position");
+            let board_center_attribute =
+                get_attribute_pointer(gl_context, &program, "board_center");
+            let color_attribute = get_attribute_pointer(gl_context, &program, "a_color");
+            let camera_up = get_uniform_location(gl_context, &program, "camera_up");
+            let camera_right = get_uniform_location(gl_context, &program, "camera_right");
+            let worldspace_transform =
+                get_uniform_location(gl_context, &program, "worldspace_transform");
+
+            BillBoardShader {
+                program,
+                board_position_attribute,
+                board_center_attribute,
+                color_attribute,
+                camera_up,
+                camera_right,
+                worldspace_transform,
             }
         };
 
         ShaderSystem {
             fade_background_shader,
             simple_shader,
+            billboard_shader,
             active_program: RefCell::new(ShaderKind::Simple),
         }
     }
@@ -165,7 +189,6 @@ fn link_program(
 
     gl_context.attach_shader(&program, &vert_shader);
     gl_context.attach_shader(&program, &frag_shader);
-
     gl_context.link_program(&program);
 
     if gl_context
@@ -178,5 +201,35 @@ fn link_program(
         Err(gl_context
             .get_program_info_log(&program)
             .unwrap_or_else(|| "Unknown error creating program".to_string()))
+    }
+}
+
+fn get_attribute_pointer(
+    gl_context: &WebGlRenderingContext,
+    program: &WebGlProgram,
+    attribute_name: &str,
+) -> u32 {
+    let attribute_signed = gl_context.get_attrib_location(&program, attribute_name);
+
+    if attribute_signed < 0 {
+        log_1(&format!("Could not get {} attribute", attribute_name).into());
+        panic!("Could not get attribute");
+    }
+
+    attribute_signed as u32
+}
+
+fn get_uniform_location(
+    gl_context: &WebGlRenderingContext,
+    program: &WebGlProgram,
+    uniform_name: &str,
+) -> WebGlUniformLocation {
+    let result = gl_context.get_uniform_location(&program, uniform_name);
+    match result {
+        Some(location) => location,
+        None => {
+            log_1(&format!("Could not get {} uniform", uniform_name).into());
+            panic!("Could not get uniform")
+        }
     }
 }
