@@ -152,9 +152,15 @@ impl App {
                 }
                 self.update_plot();
             }
-            Message::DrawGnomon(draw_flag) => {
+            Message::DrawGnomonCenter(draw_flag) => {
                 if let Some(renderer) = &mut self.renderer {
-                    renderer.borrow_mut().set_draw_gnomon(*draw_flag);
+                    renderer.borrow_mut().set_draw_gnomon_center(*draw_flag);
+                }
+                self.update_plot();
+            }
+            Message::DrawGnomonCorner(draw_flag) => {
+                if let Some(renderer) = &mut self.renderer {
+                    renderer.borrow_mut().set_draw_gnomon_corner(*draw_flag);
                 }
                 self.update_plot();
             }
@@ -190,7 +196,8 @@ pub enum Message {
     DrawBoundingBoxes(bool),
     DrawVertices(bool),
     DrawEdges(bool),
-    DrawGnomon(bool),
+    DrawGnomonCenter(bool),
+    DrawGnomonCorner(bool),
     DefaultCam,
     Debug,
     SetFov(f32),

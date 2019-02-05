@@ -27,7 +27,8 @@ pub struct WebRenderer {
     draw_vertices: bool,
     draw_edges: bool,
     draw_bb: bool,
-    draw_gnomon: bool,
+    draw_gnomon_center: bool,
+    draw_gnomon_corner: bool,
     gnomon: gnomon::Gnomon,
     fade_background: fade_background::FadeBackground,
 }
@@ -35,7 +36,7 @@ pub struct WebRenderer {
 impl WebRenderer {
     pub fn new_wrapper(gl_context: WebGlRenderingContext) -> Result<WebRendererWrapper, JsValue> {
         let shader_sys = ShaderSystem::new(&gl_context);
-        let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
+        let gnomon = gnomon::Gnomon::new(&gl_context)?;
         let fade_background = fade_background::FadeBackground::new(&gl_context)?;
 
         Ok(Rc::new(RefCell::new(WebRenderer {
@@ -45,7 +46,8 @@ impl WebRenderer {
             draw_vertices: crate::DRAW_VERTICES_START,
             draw_edges: crate::DRAW_EDGES_START,
             draw_bb: crate::DRAW_BB_START,
-            draw_gnomon: crate::DRAW_GNOMON_START,
+            draw_gnomon_center: crate::DRAW_GNOMON_CENTER_START,
+            draw_gnomon_corner: crate::DRAW_GNOMON_CORNER_START,
             gnomon,
             fade_background,
         })))
@@ -63,8 +65,12 @@ impl WebRenderer {
         self.draw_bb = draw_flag;
     }
 
-    pub fn set_draw_gnomon(&mut self, draw_flag: bool) {
-        self.draw_gnomon = draw_flag;
+    pub fn set_draw_gnomon_center(&mut self, draw_flag: bool) {
+        self.draw_gnomon_center = draw_flag;
+    }
+
+    pub fn set_draw_gnomon_corner(&mut self, draw_flag: bool) {
+        self.draw_gnomon_corner = draw_flag;
     }
 
     pub fn set_plot(&mut self, mtree: &MeshTree<MortonKey, Node>) -> Result<(), JsValue> {
@@ -86,18 +92,12 @@ impl WebRenderer {
 
         let width = self.gl_context.drawing_buffer_width();
         let height = self.gl_context.drawing_buffer_height();
-
         self.gl_context.viewport(0, 0, width, height);
 
         self.gl_context.disable(GL::DEPTH_TEST);
         self.fade_background
             .render(&self.gl_context, &self.shader_sys);
         self.gl_context.enable(GL::DEPTH_TEST);
-
-        if self.draw_gnomon {
-            self.gnomon
-                .render(&self.gl_context, &self.shader_sys, camera);
-        }
 
         match &self.plot_buffers {
             Some(plot_buffers) => {
@@ -112,5 +112,15 @@ impl WebRenderer {
             }
             None => (),
         };
+
+        if self.draw_gnomon_center {
+            self.gnomon
+                .render(&self.gl_context, &self.shader_sys, camera, false, 20.0);
+        }
+
+        if self.draw_gnomon_corner {
+            self.gnomon
+                .render(&self.gl_context, &self.shader_sys, camera, true, 1.0);
+        }
     }
 }

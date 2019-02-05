@@ -69,6 +69,10 @@ impl PlotBuffers {
     ) {
         shader_sys.use_program(gl_context, ShaderKind::Simple);
 
+        let width = gl_context.drawing_buffer_width();
+        let height = gl_context.drawing_buffer_height();
+        gl_context.viewport(0, 0, width, height);
+
         // Load in the object transfrom
         let object_transform_uniform = &shader_sys.simple_shader.object_transform_uniform;
 
