@@ -30,15 +30,13 @@ pub struct WebRenderer {
     draw_gnomon_center: bool,
     draw_gnomon_corner: bool,
     gnomon: gnomon::Gnomon,
-    corner_gnomon: gnomon::Gnomon,
     fade_background: fade_background::FadeBackground,
 }
 
 impl WebRenderer {
     pub fn new_wrapper(gl_context: WebGlRenderingContext) -> Result<WebRendererWrapper, JsValue> {
         let shader_sys = ShaderSystem::new(&gl_context);
-        let gnomon = gnomon::Gnomon::new(&gl_context, 20.0)?;
-        let corner_gnomon = gnomon::Gnomon::new(&gl_context, 1.0)?;
+        let gnomon = gnomon::Gnomon::new(&gl_context)?;
         let fade_background = fade_background::FadeBackground::new(&gl_context)?;
 
         Ok(Rc::new(RefCell::new(WebRenderer {
@@ -51,7 +49,6 @@ impl WebRenderer {
             draw_gnomon_center: crate::DRAW_GNOMON_CENTER_START,
             draw_gnomon_corner: crate::DRAW_GNOMON_CORNER_START,
             gnomon,
-            corner_gnomon,
             fade_background,
         })))
     }
@@ -118,12 +115,12 @@ impl WebRenderer {
 
         if self.draw_gnomon_center {
             self.gnomon
-                .render(&self.gl_context, &self.shader_sys, camera, false);
+                .render(&self.gl_context, &self.shader_sys, camera, false, 20.0);
         }
 
         if self.draw_gnomon_corner {
-            self.corner_gnomon
-                .render(&self.gl_context, &self.shader_sys, camera, true);
+            self.gnomon
+                .render(&self.gl_context, &self.shader_sys, camera, true, 1.0);
         }
     }
 }
