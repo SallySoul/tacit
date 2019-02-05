@@ -17,6 +17,7 @@ mod fade_background;
 mod gnomon;
 mod plot_buffers;
 use plot_buffers::PlotBuffers;
+mod point_system;
 
 pub type WebRendererWrapper = Rc<RefCell<WebRenderer>>;
 

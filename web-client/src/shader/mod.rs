@@ -2,13 +2,11 @@ use std::cell::RefCell;
 use web_sys::console::log_1;
 use web_sys::*;
 
-static SIMPLE_VS: &'static str = include_str!("./simple.vert");
-static SIMPLE_FS: &'static str = include_str!("./simple.frag");
-
-static FADE_BACKGROUND_VS: &'static str = include_str!("./fade_background.vert");
-static FADE_BACKGROUND_FS: &'static str = include_str!("./fade_background.frag");
-
-static BILLBOARD_VS: &'static str = include_str!("./billboard.vert");
+static SIMPLE_VS:                   &'static str = include_str!("./simple.vert");
+static SIMPLE_FS:                   &'static str = include_str!("./simple.frag");
+static FADE_BACKGROUND_VS:          &'static str = include_str!("./fade_background.vert");
+static FADE_BACKGROUND_FS:          &'static str = include_str!("./fade_background.frag");
+static BILLBOARD_VS:                &'static str = include_str!("./billboard.vert");
 
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -41,10 +39,10 @@ pub struct BillBoardShader {
     program: WebGlProgram,
     pub board_position_attribute: u32,
     pub board_center_attribute: u32,
-    pub color_attribute: u32,
-    pub camera_up: WebGlUniformLocation,
-    pub camera_right: WebGlUniformLocation,
-    pub worldspace_transform: WebGlUniformLocation,
+    pub color_uniform: WebGlUniformLocation,
+    pub camera_up_uniform: WebGlUniformLocation,
+    pub camera_right_uniform: WebGlUniformLocation,
+    pub worldspace_transform_uniform: WebGlUniformLocation,
 }
 
 pub struct ShaderSystem {
@@ -95,20 +93,20 @@ impl ShaderSystem {
                 get_attribute_pointer(gl_context, &program, "board_position");
             let board_center_attribute =
                 get_attribute_pointer(gl_context, &program, "board_center");
-            let color_attribute = get_attribute_pointer(gl_context, &program, "a_color");
-            let camera_up = get_uniform_location(gl_context, &program, "camera_up");
-            let camera_right = get_uniform_location(gl_context, &program, "camera_right");
-            let worldspace_transform =
+            let color_uniform = get_uniform_location(gl_context, &program, "a_color");
+            let camera_up_uniform = get_uniform_location(gl_context, &program, "camera_up");
+            let camera_right_uniform = get_uniform_location(gl_context, &program, "camera_right");
+            let worldspace_transform_uniform =
                 get_uniform_location(gl_context, &program, "worldspace_transform");
 
             BillBoardShader {
                 program,
                 board_position_attribute,
                 board_center_attribute,
-                color_attribute,
-                camera_up,
-                camera_right,
-                worldspace_transform,
+                color_uniform,
+                camera_up_uniform,
+                camera_right_uniform,
+                worldspace_transform_uniform,
             }
         };
 
