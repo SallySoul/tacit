@@ -15,6 +15,7 @@ static BILLBOARD_VS: &'static str = include_str!("./billboard.vert");
 pub enum ShaderKind {
     Simple,
     FadeBackground,
+    BillBoard,
 }
 
 /// This shader doesn't change the vertex locations, but does have color as an attribute
@@ -127,6 +128,9 @@ impl ShaderSystem {
                 }
                 ShaderKind::FadeBackground => {
                     gl_context.use_program(Some(&self.fade_background_shader.program));
+                }
+                ShaderKind::BillBoard => {
+                    gl_context.use_program(Some(&self.billboard_shader.program));
                 }
             };
             *self.active_program.borrow_mut() = shader_kind;
