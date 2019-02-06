@@ -1,55 +1,54 @@
 use super::buffers::{ArrayBuffer, IndexBuffer};
 use super::color;
 use super::color::Color;
-use crate::shader::{ShaderSystem, ShaderKind};
-use smallvec::SmallVec;
+use crate::shader::{ShaderKind, ShaderSystem};
+use camera::Camera;
 use std::mem;
 use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::WebGlRenderingContext;
-use camera::Camera;
 
 const DEFAULT_WIDTH: f32 = 1.0;
 const DEFAULT_COLOR: Color = color::BLACK;
-const MAX_POINTS_PER_BUFFER: usize = (u16::max_value() / 3) as usize;
+const MAX_POINTS_PER_BUFFER: usize = (u16::max_value() / 20) as usize;
 
-pub struct PointSystemConstructor<'a> {
+pub struct PointSystemBuilder<'a> {
     radius: f32,
     color: Color,
     active_float_buffer: Vec<f32>,
     active_point_count: usize,
-    filled_float_buffers: SmallVec<[Vec<f32>; 1]>,
+    filled_float_buffers: Vec<Vec<f32>>,
     gl_context: &'a WebGlRenderingContext,
     shader_system: &'a ShaderSystem,
 }
 
-impl<'a> PointSystemConstructor<'a> {
+impl<'a> PointSystemBuilder<'a> {
     pub fn new(
         gl_context: &'a WebGlRenderingContext,
         shader_system: &'a ShaderSystem,
-    ) -> PointSystemConstructor<'a> {
-        PointSystemConstructor {
+    ) -> PointSystemBuilder<'a> {
+        PointSystemBuilder {
             radius: DEFAULT_WIDTH,
             color: DEFAULT_COLOR,
             active_float_buffer: Vec::new(),
             active_point_count: 0,
-            filled_float_buffers: SmallVec::new(),
+            filled_float_buffers: Vec::new(),
             gl_context,
             shader_system,
         }
     }
 
-    pub fn set_radius(&'a mut self, radius: f32) -> &'a mut PointSystemConstructor {
+    pub fn set_radius(&'a mut self, radius: f32) -> &'a mut PointSystemBuilder {
         self.radius = radius;
         self
     }
 
-    pub fn set_color(&'a mut self, color: Color) -> &'a mut PointSystemConstructor {
+    pub fn set_color(&'a mut self, color: Color) -> &'a mut PointSystemBuilder {
         self.color = color;
         self
     }
 
-    pub fn add_point(&'a mut self, position: &[f32; 3]) -> &'a mut PointSystemConstructor {
+    pub fn add_point(&'a mut self, position: &[f32; 3]) -> &'a mut PointSystemBuilder {
         if self.active_point_count < MAX_POINTS_PER_BUFFER {
             // Swap out the active (and now full) buffer for an empty one
             let mut full_buffer = Vec::new();
@@ -60,13 +59,18 @@ impl<'a> PointSystemConstructor<'a> {
             self.active_point_count = 0;
             self.add_point(position)
         } else {
+            // We have four vertices per bill point bill board
+            // Without instancing, we need to have a board center for each
+            self.active_float_buffer.extend(position);
+            self.active_float_buffer.extend(position);
+            self.active_float_buffer.extend(position);
             self.active_float_buffer.extend(position);
             self.active_point_count += 1;
             self
         }
     }
 
-    pub fn finish(self) -> Result<PointSystem, JsValue> {
+    pub fn finish(mut self) -> Result<PointSystem, JsValue> {
         // Build the instance
         // This geometry should be on the x-y plane,
         // and have (0, 0, 0) as the center
@@ -90,16 +94,41 @@ impl<'a> PointSystemConstructor<'a> {
             -quad_side_length,  quad_side_length,
         ];
 
-        let indices = vec![0, 1, 2, 2, 3, 0];
+        self.filled_float_buffers.push(self.active_float_buffer);
+        let max_buffer_size = &self
+            .filled_float_buffers
+            .iter()
+            .map(|buffer| buffer.len())
+            .max()
+            .unwrap();
+        let mut vertices = Vec::with_capacity(8 * max_buffer_size);
+        let mut indices = Vec::with_capacity(6 * max_buffer_size);
+        for i in 0..*max_buffer_size {
+            vertices.extend_from_slice(&[
+                quad_side_length,
+                quad_side_length,
+                quad_side_length,
+                -quad_side_length,
+                -quad_side_length,
+                -quad_side_length,
+                -quad_side_length,
+                quad_side_length,
+            ]);
+
+            indices.extend_from_slice(&[
+                0 + i as u16,
+                1 + i as u16,
+                2 + i as u16,
+                2 + i as u16,
+                3 + i as u16,
+                0 + i as u16,
+            ]);
+        }
         let instance_vertices = ArrayBuffer::new(&self.gl_context, vertices)?;
         let instance_indices = IndexBuffer::new(&self.gl_context, indices)?;
 
         // The active buffer, and any filled buffers, need to be sent to GPU
-        let mut point_buffers = SmallVec::new();
-        point_buffers.push(PointBuffer::new(
-            &self.gl_context,
-            self.active_float_buffer,
-        )?);
+        let mut point_buffers = Vec::new();
         for buffer in self.filled_float_buffers {
             point_buffers.push(PointBuffer::new(&self.gl_context, buffer)?);
         }
@@ -114,8 +143,9 @@ impl<'a> PointSystemConstructor<'a> {
 }
 
 pub struct PointBuffer {
-    pub position_buffer: ArrayBuffer,
-    pub index_buffer: IndexBuffer,
+    pub vertices: ArrayBuffer,
+    pub indices: IndexBuffer,
+    pub size: i32,
 }
 
 impl PointBuffer {
@@ -123,11 +153,12 @@ impl PointBuffer {
         gl_context: &WebGlRenderingContext,
         float_buffer: Vec<f32>,
     ) -> Result<PointBuffer, JsValue> {
-        let point_count = float_buffer.len() as u16 / 3;
+        let size = float_buffer.len() as i32 / 3;
 
         Ok(PointBuffer {
-            position_buffer: ArrayBuffer::new(gl_context, float_buffer)?,
-            index_buffer: IndexBuffer::new(gl_context, (0..point_count).collect())?,
+            vertices: ArrayBuffer::new(gl_context, float_buffer)?,
+            indices: IndexBuffer::new(gl_context, (0..size as u16).collect())?,
+            size,
         })
     }
 }
@@ -136,7 +167,7 @@ pub struct PointSystem {
     color: Color,
     instance_vertices: ArrayBuffer,
     instance_indices: IndexBuffer,
-    point_buffers: SmallVec<[PointBuffer; 1]>,
+    point_buffers: Vec<PointBuffer>,
 }
 
 impl PointSystem {
@@ -147,47 +178,74 @@ impl PointSystem {
         camera: &Camera,
     ) {
         // Setup GL State
-        shader_sys.use_program(ShaderKind::BillBoard);
+        shader_sys.use_program(gl_context, ShaderKind::BillBoard);
         let width = gl_context.drawing_buffer_width();
         let height = gl_context.drawing_buffer_height();
         gl_context.viewport(0, 0, width, height);
 
         // Bind uniforms
-        let camera_up_uniform = shader_sys.billboard_shader.camera_up_uniform;
+        let camera_up_uniform = &shader_sys.billboard_shader.camera_up_uniform;
         let mut camera_up = camera.get_up();
-        let camera_up_mut_ref: &mut [f32; 4] = camera_up.as_mut();
-        gl_context.uniform_vec3_with_f32_array(
-            Some(camera_up_uniform),
-            false,
-            camera_up_mut_ref.as_mut()
-        );
-        
-        let camera_right_uniform = shader_sys.billboard_shader.camera_right_uniform;
-        let mut camera_right = camera.get_right();
-        let camera_right_mut_ref: &mut [f32; 4] = camera_right.as_mut();
-        gl_context.uniform_vec3_with_f32_array(
-            Some(camera_right_uniform),
-            false,
-            camera_right_mut_ref.as_mut()
-        );
+        let camera_up_mut_ref: &mut [f32; 3] = camera_up.as_mut();
+        gl_context.uniform3fv_with_f32_array(Some(camera_up_uniform), camera_up_mut_ref.as_mut());
 
-        let worldspace_transform_uniform = shader_sys.billboard_shader.worldspace_transform_uniform;
-        let worldspace_transform = camera.get_world_to_clipspace_transform();
+        let camera_right_uniform = &shader_sys.billboard_shader.camera_right_uniform;
+        let mut camera_right = camera.get_right();
+        let camera_right_mut_ref: &mut [f32; 3] = camera_right.as_mut();
+        gl_context
+            .uniform3fv_with_f32_array(Some(camera_right_uniform), camera_right_mut_ref.as_mut());
+
+        let worldspace_transform_uniform =
+            &shader_sys.billboard_shader.worldspace_transform_uniform;
+        let mut worldspace_transform = camera.get_world_to_clipspace_transform();
         let worldspace_transform_mut_ref: &mut [f32; 16] = worldspace_transform.as_mut();
         gl_context.uniform4fv_with_f32_array(
             Some(worldspace_transform_uniform),
-            false,
-            worldspace_transform_mut_ref.as_mut()
+            worldspace_transform_mut_ref.as_mut(),
         );
 
-        let color_uniform = shader_sys.billboard_shader.color_attribute;
+        let color_uniform = &shader_sys.billboard_shader.color_uniform;
         gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut self.color);
 
-        // Bind instance buffers
+        // Bind board geometry buffers
         let board_position_attribute = shader_sys.billboard_shader.board_position_attribute;
-        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(self.instance_vertices.gl_buffer));
-        gl_context.bind_buffer(GL::INDEX_BUFFER, Some(self.instance_indices.gl_buffer));
-        gl_context.vertex_attrib_pointer_with_i32(board_position_attribute, 2, GL::FLOAT, false, 0, 0);
+        gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&self.instance_vertices.gl_buffer));
+        gl_context.bind_buffer(
+            GL::ELEMENT_ARRAY_BUFFER,
+            Some(&self.instance_indices.gl_buffer),
+        );
+        gl_context.vertex_attrib_pointer_with_i32(
+            board_position_attribute,
+            2,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
         gl_context.enable_vertex_attrib_array(board_position_attribute);
+
+        for point_buffer in &self.point_buffers {
+            let vertex_count = point_buffer.size * 6;
+
+            // Bind board center buffers
+            let board_center_attribute = shader_sys.billboard_shader.board_position_attribute;
+            gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&point_buffer.vertices.gl_buffer));
+            gl_context.bind_buffer(
+                GL::ELEMENT_ARRAY_BUFFER,
+                Some(&point_buffer.indices.gl_buffer),
+            );
+            gl_context.vertex_attrib_pointer_with_i32(
+                board_center_attribute,
+                3,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
+            gl_context.enable_vertex_attrib_array(board_center_attribute);
+
+            //draw
+            gl_context.draw_elements_with_i32(GL::TRIANGLES, vertex_count, GL::UNSIGNED_SHORT, 0);
+        }
     }
 }

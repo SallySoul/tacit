@@ -2,11 +2,11 @@ use std::cell::RefCell;
 use web_sys::console::log_1;
 use web_sys::*;
 
-static SIMPLE_VS:                   &'static str = include_str!("./simple.vert");
-static SIMPLE_FS:                   &'static str = include_str!("./simple.frag");
-static FADE_BACKGROUND_VS:          &'static str = include_str!("./fade_background.vert");
-static FADE_BACKGROUND_FS:          &'static str = include_str!("./fade_background.frag");
-static BILLBOARD_VS:                &'static str = include_str!("./billboard.vert");
+static SIMPLE_VS: &'static str = include_str!("./simple.vert");
+static SIMPLE_FS: &'static str = include_str!("./simple.frag");
+static FADE_BACKGROUND_VS: &'static str = include_str!("./fade_background.vert");
+static FADE_BACKGROUND_FS: &'static str = include_str!("./fade_background.frag");
+static BILLBOARD_VS: &'static str = include_str!("./billboard.vert");
 
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
