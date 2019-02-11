@@ -86,14 +86,22 @@ impl ShaderSystem {
         };
 
         let billboard_shader = {
-            let program = create_program(&gl_context, BILLBOARD_VS, FADE_BACKGROUND_FS)
+            let program = create_program(&gl_context, BILLBOARD_VS, SIMPLE_FS)
                 .expect("Create BillBoard Shader");
 
             let board_position_attribute =
                 get_attribute_pointer(gl_context, &program, "board_position");
             let board_center_attribute =
                 get_attribute_pointer(gl_context, &program, "board_center");
-            let color_uniform = get_uniform_location(gl_context, &program, "a_color");
+
+            log_1(
+                &format!(
+                    "bpa: {}, bca: {}",
+                    board_position_attribute, board_center_attribute
+                )
+                .into(),
+            );
+            let color_uniform = get_uniform_location(gl_context, &program, "color");
             let camera_up_uniform = get_uniform_location(gl_context, &program, "camera_up");
             let camera_right_uniform = get_uniform_location(gl_context, &program, "camera_right");
             let worldspace_transform_uniform =

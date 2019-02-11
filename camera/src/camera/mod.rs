@@ -254,11 +254,13 @@ impl Camera {
     }
 
     pub fn get_up(&self) -> Vector3<f32> {
-        self.get_world_to_camera_transform().x.truncate()
+        Matrix3::from(self.get_rotation().invert()) * Vector3::new(1.0, 0.0, 0.0)
+        //self.get_world_to_camera_transform().x.truncate()
     }
 
     pub fn get_right(&self) -> Vector3<f32> {
-        self.get_world_to_camera_transform().y.truncate()
+        Matrix3::from(self.get_rotation().invert()) * Vector3::new(0.0, 1.0, 0.0)
+        //self.get_world_to_camera_transform().y.truncate()
     }
 
     /// The Rotation applied to world coordinates as part of the view matrix
@@ -297,7 +299,7 @@ impl Camera {
     // screenspace. Screenspace is a rectangle, and it must circumscribe the unit circle
     // When the screen is square, screen space is [-1, 1]^2
     fn mouse_to_screen(&self, mouse_coords: Vector2<f32>) -> Vector2<f32> {
-        // Part of this transfrom is a scaling operation. We can figure this out by figuring out
+        // Part of this transform is a scaling operation. We can figure this out by figuring out
         // the radius of the circle in pixels that will map to the radius of the unit circle
         // The radius is either half of self.window_width or window_height depending on which is
         // smaller

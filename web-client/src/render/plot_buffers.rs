@@ -1,5 +1,6 @@
 use super::buffers::{ArrayBuffer, IndexBuffer};
 use super::color::*;
+use super::point_system::*;
 use crate::shader::{ShaderKind, ShaderSystem};
 use camera::Camera;
 use implicit_mesh::cell_keys::morton_keys::MortonKey;
@@ -10,9 +11,7 @@ use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
 pub struct PlotBuffers {
-    point_count: i32,
-    point_vertices_buffer: ArrayBuffer,
-    point_indices_buffer: IndexBuffer,
+    points: PointSystem,
 
     edge_count: i32,
     edge_vertices_buffer: ArrayBuffer,
@@ -28,10 +27,18 @@ impl PlotBuffers {
         gl_context: &WebGlRenderingContext,
         mtree: &MeshTree<MortonKey, Node>,
     ) -> Result<PlotBuffers, JsValue> {
-        let point_float_vec = mtree.get_vertex_floats();
-        let point_count = point_float_vec.len() / 3;
-        let point_vertices_buffer = ArrayBuffer::new(gl_context, point_float_vec)?;
-        let point_indices_buffer = IndexBuffer::new(gl_context, (0..point_count as u16).collect())?;
+        let points = {
+            let mut points_builder = PointSystemBuilder::new(gl_context);
+
+            points_builder.set_radius(1.0);
+            points_builder.set_color(Color::from_floats(0.33, 0.86, 0.42, 1.0));
+
+            for point in mtree.get_vertex_points() {
+                points_builder.add_point(point);
+            }
+
+            points_builder.finish()?
+        };
 
         let edge_float_vec = mtree.get_edge_floats();
         let edge_vertex_count = edge_float_vec.len() / 3;
@@ -46,9 +53,7 @@ impl PlotBuffers {
             IndexBuffer::new(gl_context, (0..bb_vertex_count as u16).collect())?;
 
         Ok(PlotBuffers {
-            point_count: point_count as i32,
-            point_vertices_buffer,
-            point_indices_buffer,
+            points,
             edge_count: (edge_vertex_count / 2) as i32,
             edge_vertices_buffer,
             edge_indices_buffer,
@@ -141,27 +146,90 @@ impl PlotBuffers {
         }
 
         if draw_points {
-            let mut edge_color = Color::from_floats(0.33, 0.86, 0.42, 1.0);
-            gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut edge_color);
+            //self.points.render(gl_context, shader_sys, camera);
+            // Setup GL State
+            shader_sys.use_program(gl_context, ShaderKind::BillBoard);
+            let width = gl_context.drawing_buffer_width();
+            let height = gl_context.drawing_buffer_height();
+            gl_context.viewport(0, 0, width, height);
 
-            gl_context.bind_buffer(
-                GL::ARRAY_BUFFER,
-                Some(&self.point_vertices_buffer.gl_buffer),
+            // Bind uniforms
+            let camera_up_uniform = &shader_sys.billboard_shader.camera_up_uniform;
+            let mut camera_up = camera.get_up();
+            let camera_up_mut_ref: &mut [f32; 3] = camera_up.as_mut();
+            gl_context
+                .uniform3fv_with_f32_array(Some(camera_up_uniform), camera_up_mut_ref.as_mut());
+
+            let camera_right_uniform = &shader_sys.billboard_shader.camera_right_uniform;
+            let mut camera_right = camera.get_right();
+            let camera_right_mut_ref: &mut [f32; 3] = camera_right.as_mut();
+            gl_context.uniform3fv_with_f32_array(
+                Some(camera_right_uniform),
+                camera_right_mut_ref.as_mut(),
             );
-            gl_context.bind_buffer(
-                GL::ELEMENT_ARRAY_BUFFER,
-                Some(&self.point_indices_buffer.gl_buffer),
+
+            let worldspace_transform_uniform =
+                &shader_sys.billboard_shader.worldspace_transform_uniform;
+            let mut worldspace_transform = camera.get_world_to_clipspace_transform();
+            let worldspace_transform_mut_ref: &mut [f32; 16] = worldspace_transform.as_mut();
+            gl_context.uniform_matrix4fv_with_f32_array(
+                Some(worldspace_transform_uniform),
+                false,
+                worldspace_transform_mut_ref.as_mut(),
             );
+
+            let color_uniform = &shader_sys.billboard_shader.color_uniform;
+            gl_context.uniform4fv_with_f32_array(Some(color_uniform), &mut BLACK.clone());
+
+            let bpa = ArrayBuffer::new(
+                gl_context,
+                vec![
+                    -2.0, 2.0, 2.0, 2.0, 2.0, -2.0, -2.0, -2.0, -2.0, 2.0, 2.0, 2.0, 2.0, -2.0,
+                    -2.0, -2.0,
+                ],
+            )
+            .unwrap();
+
+            let bca = ArrayBuffer::new(
+                gl_context,
+                vec![
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0, 20.0, 20.0,
+                    20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+                ],
+            )
+            .unwrap();
+
+            let indices =
+                IndexBuffer::new(gl_context, vec![0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4]).unwrap();
+
+            let board_position_attribute = shader_sys.billboard_shader.board_position_attribute;
+            gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&bpa.gl_buffer));
             gl_context.vertex_attrib_pointer_with_i32(
-                position_attribute,
+                board_position_attribute,
+                2,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
+            gl_context.enable_vertex_attrib_array(board_position_attribute);
+
+            let board_center_attribute = shader_sys.billboard_shader.board_center_attribute;
+            gl_context.bind_buffer(GL::ARRAY_BUFFER, Some(&bca.gl_buffer));
+            gl_context.vertex_attrib_pointer_with_i32(
+                board_center_attribute,
                 3,
                 GL::FLOAT,
                 false,
                 0,
                 0,
             );
-            gl_context.enable_vertex_attrib_array(position_attribute);
-            gl_context.draw_elements_with_i32(GL::POINTS, self.point_count, GL::UNSIGNED_SHORT, 0);
+            gl_context.enable_vertex_attrib_array(board_center_attribute);
+
+            gl_context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&indices.gl_buffer));
+
+            //draw
+            gl_context.draw_elements_with_i32(GL::TRIANGLES, 8, GL::UNSIGNED_SHORT, 0);
         }
     }
 }

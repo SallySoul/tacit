@@ -149,6 +149,7 @@ impl<F: Function> MeshTree<MortonKey, F> {
         let root_key = MortonKey::root_key();
         if bb.contains_root(&result.function) {
             result.solution_map.insert(root_key, bb);
+            result.vertex_map.insert(root_key, bb.center());
         }
 
         result
@@ -379,6 +380,12 @@ impl<F: Function> MeshTree<MortonKey, F> {
         }
 
         result
+    }
+
+    pub fn get_vertex_points(&self) -> impl Iterator<Item = [f32; 3]> + '_ {
+        self.vertex_map
+            .values()
+            .map(|vertex| [vertex.x.clone(), vertex.y.clone(), vertex.z.clone()])
     }
 
     pub fn get_vertex_floats(&self) -> Vec<f32> {
