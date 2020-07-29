@@ -10,7 +10,7 @@ fi
 
 # Ensure target dir exists
 #rm -rf target/web
-#mkdir -p target/web
+mkdir -p target/web
 
 # Install index.html
 cp web-client/src_web/index.html target/web
