@@ -33,10 +33,11 @@ Only the `web-client` crate has special dependencies at the moment. We use
 `wasm-bindgen`, version `0.2.33` for now. I would suggest the following.
 
 ```
-cargo install wasm-bindgen-cli --version 0.2.33
+./build.sh
 ```
 
-Note that running `web-client/build.sh` will ensure you have the right version installed.
+This will ensure you have the right version installed.
+The resulting `target/web` directory will be ready to deploy.
 I would like to figure out how to setup a virtual env kind of setup for rust / cargo but have
 not done so yet.
 

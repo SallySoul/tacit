@@ -1,0 +1,43 @@
+version: 2.1
+
+executors:
+  rust-executor:
+    docker:
+      - image: rust:latest
+
+jobs:
+  build-web:
+    executor: rust-executor
+    steps:
+      - checkout
+      - run:
+          name: install rustfmt
+          command: rustup component add rustfmt
+      - run:
+          name: install wasm32-unknown-unknown
+          command: rustup target add wasm32-unknown-unknown
+      - run:
+          name: check formatting
+          command: cargo fmt -- --check
+      - run:
+          name: build web 
+          command: ./build_web.sh
+      - store_artifacts:
+          path: ~/project/target/web
+          destination: w
+      - run:
+          name: Install Butler
+          command: |
+            curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+            unzip butler.zip
+            chmod +x butler
+            ./butler -V
+      - run:
+          name: Push to Itch.io
+          command: ./butler push ~/project/target/web ThermalSpan/tacit:${CIRCLE_BRANCH}
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-web
