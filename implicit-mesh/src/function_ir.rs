@@ -212,5 +212,4 @@ mod tests {
         result = root.evaluate_interval(&bindings);
         assert!(result[0].contains_zero());
     }
-
 }

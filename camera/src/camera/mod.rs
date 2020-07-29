@@ -532,5 +532,4 @@ mod tests {
         screen_point = camera.mouse_to_screen(vec2(256.0, 512.0)).into();
         close(&screen_point, &[0.0, 0.0], f32::EPSILON);
     }
-
 }
