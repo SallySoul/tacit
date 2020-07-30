@@ -5,32 +5,31 @@
   <body>
 
     <div id="tacit-app"> </div>
+    <script type="module">
+     import init, {WebClient} from "./tacit_web_app.js"
 
-    <script src='tacit_web_app.js'></script>
+     async function run() {
+         await init()
 
-    <script>
-    console.log("Starting script in index.html");
-      console.log("Window event handler called");
-      window.wasm_bindgen('/tacit_web_app_bg.wasm')
-        .then(function () {
-          console.log("Post loading wasm called");
-          // Start our rust application. You can find `WebClient` in `src/lib.rs`
-          const webClient = new window.wasm_bindgen.WebClient()
-          webClient.start()
+         const webClient = new WebClient()
 
-          let time = Date.now();
-          function render () {
-            const dt = Date.now() - time
+         webClient.start()
 
-            webClient.update(dt)
-            webClient.render()
-            window.requestAnimationFrame(render)
+         let time = Date.now();
+         function render () {
+             const dt = Date.now() - time
 
-            time = Date.now()
-          }
+             webClient.update(dt)
+             webClient.render()
+             window.requestAnimationFrame(render)
 
-          render()
-        })
+             time = Date.now()
+         }
+
+         render()
+     }
+
+     run()
     </script>
 
   </body>
