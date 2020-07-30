@@ -1,14 +1,10 @@
 # Tacit
 
-Implicit Equations to Meshes
-
-[![Build Status](https://travis-ci.org/SallySoul/tacit.svg?branch=master)](https://travis-ci.org/SallySoul/tacit)
-
-## Introduction
-
 [![CircleCI](https://circleci.com/gh/SallySoul/demo_072020.svg?style=svg)](https://app.circleci.com/pipelines/github/SallySoul/tacit)
 
 [Available On Itch.io](https://thermalspan.itch.io/tacit)
+
+## Introduction
 
 This repo contains several interconnected projects based around taking implicit
 equations and generating meshes that approximate their solution.
