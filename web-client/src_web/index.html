@@ -10,7 +10,6 @@
 
     <script>
     console.log("Starting script in index.html");
-    window.addEventListener('load', function () {
       console.log("Window event handler called");
       window.wasm_bindgen('/tacit_web_app_bg.wasm')
         .then(function () {
@@ -32,7 +31,6 @@
 
           render()
         })
-    })
     </script>
 
   </body>

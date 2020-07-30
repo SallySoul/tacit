@@ -6,6 +6,10 @@ Implicit Equations to Meshes
 
 ## Introduction
 
+[![CircleCI](https://circleci.com/gh/SallySoul/demo_072020.svg?style=svg)](https://app.circleci.com/pipelines/github/SallySoul/tacit)
+
+[Available On Itch.io](https://thermalspan.itch.io/tacit)
+
 This repo contains several interconnected projects based around taking implicit
 equations and generating meshes that approximate their solution.
 
